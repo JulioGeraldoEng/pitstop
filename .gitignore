@@ -1,0 +1,18 @@
+# Node modules
+**/node_modules/
+**/package-lock.json
+
+# Banco de dados SQLite
+**/*.db
+
+# Pastas do Expo
+*.expo
+.expo/
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+
+# Configurações locais
+.vscode/
+.env

@@ -1,0 +1,14 @@
+{
+  "name": "pitstop-desktop",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "sqlite3": "^5.1.6"
+  },
+  "devDependencies": {
+    "electron": "^30.0.0"
+  }
+}
