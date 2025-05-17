@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Registrar Venda</title>
+</head>
+<body>
+  <h1>Registrar Venda</h1>
+
+  <label for="cliente">Cliente:</label>
+  <select id="cliente"></select><br><br>
+
+  <label for="produto">Produto:</label>
+  <select id="produto"></select><br><br>
+
+  <label for="quantidade">Quantidade:</label>
+  <input type="number" id="quantidade" min="1" value="1"><br><br>
+
+  <button id="adicionar">Adicionar Item</button>
+  <button id="finalizar">Finalizar Venda</button>
+  <button id="sair">Sair</button>
+
+  <h2>Itens da Venda:</h2>
+  <ul id="itens"></ul>
+
+  <p id="mensagem"></p>
+  <div class="menu">
+    <button onclick="irPara('../dashboard/dashboard.html')">
+      <i class="fas fa-box"></i> Início
+    </button>
+    <button onclick="logout()">
+      <i class="fas fa-sign-out-alt"></i> Sair
+    </button>
+  </div>
+  <script src="venda.js"></script>
+</body>
+</html>

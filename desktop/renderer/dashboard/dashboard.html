@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Pitstop - Início</title>
+
+  <!-- Font Awesome CDN para ícones -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+  <h1>Pitstop - Sistema de Vendas</h1>
+
+  <div class="menu">
+    <button onclick="irPara('../venda/venda.html')">
+      <i class="fas fa-cash-register"></i> Cadastrar Venda
+    </button>
+    <button onclick="irPara('../relatorio/relatorio.html')">
+      <i class="fas fa-chart-bar"></i> Gerar Relatório
+    </button>
+    <button onclick="irPara('../cliente/cliente.html')">
+      <i class="fas fa-user-plus"></i> Cadastrar Cliente
+    </button>
+    <button onclick="irPara('../produto/produto.html')">
+      <i class="fas fa-box"></i> Produtos
+    </button>
+    <button onclick="logout()">
+      <i class="fas fa-sign-out-alt"></i> Sair
+    </button>
+  </div>
+
+  <script src="dashboard.js"></script>
+
+</body>
+</html>
