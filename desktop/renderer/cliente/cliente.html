@@ -2,18 +2,41 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Clientes</title>
+  <title>Pitstop - Clientes</title>
+
+  <!-- Font Awesome para ícones -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- Estilo -->
+  <link rel="stylesheet" href="cliente.css">
 </head>
 <body>
-  <h1>Clientes</h1>
+  <h1>Cadastro de Clientes</h1>
+
+  <form id="clienteForm" class="formulario">
+    <label for="nome">Nome:</label>
+    <input type="text" id="nome" required>
+
+    <label for="telefone">Telefone:</label>
+    <input type="text" id="telefone" placeholder="(XX) XXXXX-XXXX">
+
+    <label for="observacao">Observação:</label>
+    <textarea id="observacao" rows="4"></textarea>
+
+    <button type="submit"><i class="fas fa-save"></i> Salvar Cliente</button>
+  </form>
+
+  <p id="mensagem"  style="text-align: center; font-size: 18px; font-weight: bold; margin-top: 10px;"></p>
+
   <div class="menu">
     <button onclick="irPara('../dashboard/dashboard.html')">
-      <i class="fas fa-box"></i> Início
+      <i class="fas fa-home"></i> Início
     </button>
     <button onclick="logout()">
       <i class="fas fa-sign-out-alt"></i> Sair
     </button>
   </div>
+
   <script src="cliente.js"></script>
 </body>
 </html>

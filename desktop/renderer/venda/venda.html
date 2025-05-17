@@ -2,36 +2,72 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Registrar Venda</title>
+  <title>Pitstop - Registrar Venda</title>
+
+  <!-- Font Awesome para ícones -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Estilo local -->
+  <link rel="stylesheet" href="venda.css">
 </head>
 <body>
+
   <h1>Registrar Venda</h1>
 
-  <label for="cliente">Cliente:</label>
-  <select id="cliente"></select><br><br>
+  <div class="form-container">
+    <div class="form-container">
+      <div class="campo">
+        <label for="cliente">Cliente:</label>
+        <select id="cliente"></select>
+      </div>
 
-  <label for="produto">Produto:</label>
-  <select id="produto"></select><br><br>
+      <div class="campo">
+        <label for="produto">Produto:</label>
+        <select id="produto"></select>
+      </div>
 
-  <label for="quantidade">Quantidade:</label>
-  <input type="number" id="quantidade" min="1" value="1"><br><br>
+      <div class="campo">
+        <label for="quantidade">Quantidade:</label>
+        <input type="number" id="quantidade" min="1" value="1">
+      </div>
+    </div>
 
-  <button id="adicionar">Adicionar Item</button>
-  <button id="finalizar">Finalizar Venda</button>
-  <button id="sair">Sair</button>
+
+    <div class="buttons">
+      <button id="adicionar"><i class="fas fa-plus-circle"></i> Adicionar Item</button>
+      <button id="finalizar"><i class="fas fa-check-circle"></i> Finalizar Venda</button>
+    </div>
+  </div>
 
   <h2>Itens da Venda:</h2>
-  <ul id="itens"></ul>
+  <table id="tabelaItens" class="tabela-venda">
+    <thead>
+      <tr>
+        <th>Produto</th>
+        <th>Qtd</th>
+        <th>Preço Unitário</th>
+        <th>Subtotal</th>
+        <th>Ações</th> <!-- nova coluna -->
+      </tr>
+    </thead>
+    <tbody id="itens"></tbody>
+  </table>
 
-  <p id="mensagem"></p>
+  <p id="totalVenda" style="text-align: center; font-size: 18px; font-weight: bold; margin-top: 10px;"></p>
+
+
+  <p id="mensagem"  style="text-align: center; font-size: 18px; font-weight: bold; margin-top: 10px;"></p>
+
   <div class="menu">
     <button onclick="irPara('../dashboard/dashboard.html')">
-      <i class="fas fa-box"></i> Início
+      <i class="fas fa-home"></i> Início
     </button>
     <button onclick="logout()">
       <i class="fas fa-sign-out-alt"></i> Sair
     </button>
   </div>
+
   <script src="venda.js"></script>
 </body>
 </html>

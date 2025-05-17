@@ -6,6 +6,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getClientes: () => ipcRenderer.invoke('get-clientes'),
   getProdutos: () => ipcRenderer.invoke('get-produtos'),
   registrarVenda: (dados) => ipcRenderer.invoke('registrar-venda', dados),
+  salvarCliente: (cliente) => ipcRenderer.invoke('salvar-cliente', cliente),
+  salvarProduto: (produto) => ipcRenderer.invoke('salvar-produto', produto),
+
   
   // Adicione esta linha para debug
   fixInputs: () => {
