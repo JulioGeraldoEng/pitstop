@@ -10,11 +10,5 @@
   },
   "devDependencies": {
     "electron": "^30.0.0"
-  },
-  "build": {
-    "appId": "com.pitstop.desktop",
-    "win": {
-      "icon": "renderer/assets/icon/pitstop_icon.png"
-    }
   }
 }

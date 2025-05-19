@@ -38,6 +38,7 @@ if (!dbExiste) {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       cliente_id INTEGER,
       data TEXT NOT NULL,
+      data_vencimento TEXT,
       total REAL NOT NULL,
       FOREIGN KEY (cliente_id) REFERENCES clientes(id)
     )`);
@@ -215,14 +216,34 @@ ipcMain.handle('get-produtos', async () => {
   });
 });
 
+ipcMain.handle('buscar-clientes', async (event, termo) => {
+  return new Promise((resolve) => {
+    db.all("SELECT id, nome FROM clientes WHERE nome LIKE ?", [`%${termo}%`], (err, rows) => {
+      resolve(err ? [] : rows);
+    });
+  });
+});
+
+ipcMain.handle('buscar-produtos', async (event, termo) => {
+  return new Promise((resolve) => {
+    db.all("SELECT id, nome, preco FROM produtos WHERE nome LIKE ?", [`%${termo}%`], (err, rows) => {
+      resolve(err ? [] : rows);
+    });
+  });
+});
+
+
 // Registrar Venda
 ipcMain.handle('registrar-venda', async (event, dados) => {
   return new Promise((resolve) => {
-    const dataAtual = new Date().toISOString().split('T')[0];
+    //const dataAtual = new Date().toISOString().split('T')[0];
+    const dataAtual = new Date().toLocaleString('pt-BR'); // Ex: "17/05/2025 17:41:00"
+
     
     db.run(
-      `INSERT INTO vendas (cliente_id, data, total) VALUES (?, ?, ?)`,
-      [dados.cliente_id, dataAtual, dados.total],
+      `INSERT INTO vendas (cliente_id, data, total, data_vencimento) VALUES (?, ?, ?, ?)`,
+      [dados.cliente_id, dataAtual, dados.total, dados.vencimento],
+
       function (err) {
         if (err) {
           console.error('Erro ao salvar venda:', err.message);
@@ -243,3 +264,57 @@ ipcMain.handle('registrar-venda', async (event, dados) => {
   });
 });
 
+// Handler para autocomplete de clientes por nome
+ipcMain.handle('buscar-clientes-por-nome', async (event, termo) => {
+  return new Promise((resolve) => {
+    db.all("SELECT id, nome FROM clientes WHERE nome LIKE ?", [`%${termo}%`], (err, rows) => {
+      resolve(err ? [] : rows);
+    });
+  });
+});
+
+// Handler para autocomplete de produtos por nome
+ipcMain.handle('buscar-produtos-por-nome', async (event, termo) => {
+  return new Promise((resolve) => {
+    db.all("SELECT id, nome, preco FROM produtos WHERE nome LIKE ?", [`%${termo}%`], (err, rows) => {
+      resolve(err ? [] : rows);
+    });
+  });
+});
+
+
+ipcMain.handle('buscar-relatorio', async (event, filtros) => {
+  return new Promise((resolve) => {
+    let query = `
+      SELECT v.id, v.data, v.data_vencimento, v.total, c.nome as cliente
+      FROM vendas v
+      JOIN clientes c ON v.cliente_id = c.id
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (filtros.cliente) {
+      query += ` AND c.nome LIKE ?`;
+      params.push(`%${filtros.cliente}%`);
+    }
+
+    if (filtros.dataInicioVenda && filtros.dataFimVenda) {
+      query += ` AND date(v.data) BETWEEN date(?) AND date(?)`;
+      params.push(filtros.dataInicioVenda, filtros.dataFimVenda);
+    }
+
+    if (filtros.dataInicioVenc && filtros.dataFimVenc) {
+      query += ` AND date(v.data_vencimento) BETWEEN date(?) AND date(?)`;
+      params.push(filtros.dataInicioVenc, filtros.dataFimVenc);
+    }
+
+    db.all(query, params, (err, rows) => {
+      if (err) {
+        console.error('Erro ao buscar relatório:', err.message);
+        resolve([]);
+      } else {
+        resolve(rows);
+      }
+    });
+  });
+});

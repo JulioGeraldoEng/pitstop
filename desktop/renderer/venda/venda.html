@@ -18,18 +18,23 @@
   <div class="form-container">
     <div class="form-container">
       <div class="campo">
-        <label for="cliente">Cliente:</label>
-        <select id="cliente"></select>
-      </div>
+      <label for="cliente">Cliente:</label>
+      <input type="text" id="cliente" autocomplete="off">
+    </div>
 
-      <div class="campo">
-        <label for="produto">Produto:</label>
-        <select id="produto"></select>
-      </div>
+    <div class="campo">
+      <label for="produto">Produto:</label>
+      <input type="text" id="produto" autocomplete="off">
+    </div>
 
       <div class="campo">
         <label for="quantidade">Quantidade:</label>
         <input type="number" id="quantidade" min="1" value="1">
+      </div>
+
+      <div>
+        <label for="vencimento">Data de vencimento:</label>
+        <input type="date" id="vencimento" required>
       </div>
     </div>
 

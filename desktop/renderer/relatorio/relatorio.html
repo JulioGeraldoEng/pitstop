@@ -3,12 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <title>Relatório de Vendas</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <link rel="stylesheet" href="relatorio.css">
 </head>
 <body>
-  <h1>Relatorio</h1>
+  <h1>Relatório de Vendas</h1>
+
+  <div class="filtros">
+    <div class="campo">
+      <label for="clienteFiltro">Cliente:</label>
+      <input type="text" id="clienteFiltro" placeholder="Digite o nome...">
+      <div id="sugestoesCliente" class="sugestoes-box"></div>
+    </div>
+    
+    <div class="campo">
+      <label>Data da Venda:</label>
+      <div class="linha">
+        <input type="date" id="dataInicioVenda">
+        <span>até</span>
+        <input type="date" id="dataFimVenda">
+      </div>
+    </div>
+    
+    <div class="campo">
+      <label>Data de Vencimento:</label>
+      <div class="linha">
+        <input type="date" id="dataInicioVenc">
+        <span>até</span>
+        <input type="date" id="dataFimVenc">
+      </div>
+    </div>
+
+    <button onclick="buscarRelatorio()">
+      <i class="fas fa-search"></i> Buscar
+    </button>
+
+  </div>
+
+
+
+  <div id="resultadoRelatorio"></div>
+
   <div class="menu">
     <button onclick="irPara('../dashboard/dashboard.html')">
-      <i class="fas fa-box"></i> Produtos
+      <i class="fas fa-home"></i> Início
     </button>
     <button onclick="logout()">
       <i class="fas fa-sign-out-alt"></i> Sair

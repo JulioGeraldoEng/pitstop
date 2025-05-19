@@ -47,6 +47,53 @@ document.getElementById('clienteForm').addEventListener('submit', async (e) => {
   }
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+  const inputNome = document.getElementById('nome');
+  const sugestoes = document.createElement('div');
+  sugestoes.id = 'sugestoes-clientes';
+  sugestoes.style.position = 'absolute';
+  sugestoes.style.background = 'white';
+  sugestoes.style.border = '1px solid #ccc';
+  sugestoes.style.zIndex = '1000';
+  sugestoes.style.display = 'none';
+  document.body.appendChild(sugestoes);
+
+  inputNome.addEventListener('input', async () => {
+    const termo = inputNome.value.trim();
+    sugestoes.innerHTML = '';
+    sugestoes.style.display = 'none';
+
+    if (termo.length < 2) return;
+
+    const clientes = await window.electronAPI.buscarClientesPorNome(termo);
+    if (clientes.length === 0) return;
+
+    clientes.forEach(cliente => {
+      const div = document.createElement('div');
+      div.textContent = cliente.nome;
+      div.style.padding = '5px';
+      div.style.cursor = 'pointer';
+      div.addEventListener('click', () => {
+        inputNome.value = cliente.nome;
+        sugestoes.style.display = 'none';
+      });
+      sugestoes.appendChild(div);
+    });
+
+    const rect = inputNome.getBoundingClientRect();
+    sugestoes.style.left = `${rect.left + window.scrollX}px`;
+    sugestoes.style.top = `${rect.bottom + window.scrollY}px`;
+    sugestoes.style.width = `${rect.width}px`;
+    sugestoes.style.display = 'block';
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!sugestoes.contains(e.target) && e.target !== inputNome) {
+      sugestoes.style.display = 'none';
+    }
+  });
+});
+
 // Funções auxiliares
 function irPara(pagina) {
   window.location.href = pagina;
