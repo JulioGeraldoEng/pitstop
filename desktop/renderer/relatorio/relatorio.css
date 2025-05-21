@@ -1,60 +1,18 @@
 body {
   font-family: Arial, sans-serif;
   background-color: rgba(238, 255, 0, 0.911);
-  padding: 20px;
+  padding: 30px;
   color: #333;
 }
 
-h1 {
-  text-align: center;
-  color: #0078d7;
-  margin-bottom: 30px;
-}
-
-.filtros {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  max-width: 600px;
-  margin: 0 auto 30px;
-}
-
-.campo {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.campo label {
-  font-weight: bold;
-}
-
-.linha {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.linha input[type="date"] {
-  flex: 1;
-  min-width: 140px;
-}
-
-input[type="text"] {
-  padding: 8px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  font-size: 14px;
-}
-
+/* Botões */
 button {
-  padding: 8px 16px;
+  padding: 10px 20px;
+  margin: 5px;
   background-color: #0078d7;
   color: white;
-  font-size: 14px;
   border: none;
-  border-radius: 4px;
+  border-radius: 5px;
   cursor: pointer;
 }
 
@@ -62,39 +20,251 @@ button:hover {
   background-color: #005fa3;
 }
 
-
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-  background: white;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+.top-bar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding-bottom: 20px;
 }
 
-th, td {
-  padding: 12px;
-  border: 1px solid #ddd;
+.top-bar button {
+  padding: 8px 15px;
+  background-color: #0078d7;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.top-bar button:hover {
+  background-color: #005fa3;
+}
+
+
+h1, h2 {
   text-align: center;
 }
 
-th {
+.form-container {
+  max-width: 400px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 15px;
+}
+
+.campo label {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+input {
+  width: 100%;
+  max-width: 300px;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+.date-range {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.date-range input {
+  width: 120px;
+}
+
+.buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #0078d7;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+button:hover {
+  background-color: #005fa3;
+}
+
+button#buscar {
+  background-color: #4CAF50;
+}
+
+button#buscar:hover {
+  background-color: #45a049;
+}
+
+button#limpar {
+  background-color: #f44336;
+}
+
+button#limpar:hover {
+  background-color: #d32f2f;
+}
+
+.menu {
+  text-align: center;
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.tabela-venda {
+  width: 100%;
+  max-width: 1000px;
+  margin: 20px auto;
+  border-collapse: collapse;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  background-color: white;
+}
+
+.tabela-venda th,
+.tabela-venda td {
+  border: 1px solid #ccc;
+  padding: 2px 4px;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.0;
+}
+
+.tabela-venda th {
   background-color: #f0f0f0;
+  font-weight: bold;
+}
+
+/* Larguras proporcionais */
+.tabela-venda th:nth-child(1),
+.tabela-venda td:nth-child(1) {
+  width: 10%; /* ID */
+}
+
+.tabela-venda th:nth-child(2),
+.tabela-venda td:nth-child(2) {
+  width: 30%; /* Cliente */
+}
+
+.tabela-venda th:nth-child(3),
+.tabela-venda td:nth-child(3) {
+  width: 20%; /* Data da Venda */
+}
+
+.tabela-venda th:nth-child(4),
+.tabela-venda td:nth-child(4) {
+  width: 20%; /* Vencimento */
+}
+
+.tabela-venda th:nth-child(5),
+.tabela-venda td:nth-child(5) {
+  width: 20%; /* Total */
+}
+
+.resumo-venda {
+  text-align: center;
+  margin-top: 20px;
+}
+
+#totalRelatorio {
+  font-size: 18px;
   font-weight: bold;
 }
 
 #mensagem {
-  text-align: center;
-  margin-top: 20px;
-  font-weight: bold;
+  font-size: 16px;
+  margin-top: 10px;
 }
 
 .sugestoes-box {
+  position: absolute;
+  background: white;
+  border: 1px solid #ccc;
+  border-top: none;
+  z-index: 1000;
+  width: 100%;
   max-height: 200px;
   overflow-y: auto;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.sugestoes-box div {
+  padding: 8px;
+  cursor: pointer;
 }
 
 .sugestoes-box div:hover {
   background-color: #f0f0f0;
+}
+
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .form-group {
+    grid-template-columns: 1fr;
+  }
+  
+  .date-range {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .date-range span {
+    display: none;
+  }
+}
+
+/* Padronizar o estilo da caixa de sugestões */
+.sugestoes {
+  position: absolute;
+  background: white;
+  border: 1px solid #ccc;
+  border-top: none;
+  z-index: 1000;
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.sugestoes div {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.sugestoes div:hover {
+  background-color: #f0f0f0;
+}
+
+/* Estilo opcional para separar visualmente as seções */
+.resultados-venda {
+  max-width: 1000px;
+  margin: 0 auto 30px;
+}
+
+.container-centralizado {
+  max-width: 400px;
+  margin: 0 auto 30px;
 }

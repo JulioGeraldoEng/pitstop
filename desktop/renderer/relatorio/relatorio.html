@@ -1,60 +1,98 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <title>Relatório de Vendas</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Relatório de Vendas</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="relatorio.css">
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+  </head>
+  <body>
 
-  <link rel="stylesheet" href="relatorio.css">
-</head>
-<body>
-  <h1>Relatório de Vendas</h1>
-
-  <div class="filtros">
-    <div class="campo">
-      <label for="clienteFiltro">Cliente:</label>
-      <input type="text" id="clienteFiltro" placeholder="Digite o nome...">
-      <div id="sugestoesCliente" class="sugestoes-box"></div>
+    <div class="top-bar">
+      <button type="button" onclick="irPara('../dashboard/dashboard.html')">
+        <i class="fas fa-home"></i> Início
+      </button>
+      <button type="button" onclick="logout()">
+        <i class="fas fa-sign-out-alt"></i> Sair
+      </button>
     </div>
-    
-    <div class="campo">
-      <label>Data da Venda:</label>
-      <div class="linha">
-        <input type="date" id="dataInicioVenda">
-        <span>até</span>
-        <input type="date" id="dataFimVenda">
+
+
+    <h1>Relatório de Vendas</h1>
+
+    <div class="form-container">
+      <div class="form-group">
+        <div class="campo">
+          <label for="cliente">Cliente:</label>
+          <input type="text" id="cliente" placeholder="Digite o nome do cliente">
+          <div id="sugestoesCliente" class="sugestoes-box"></div>
+        </div>
+
+        <div class="campo">
+          <label>Data da Venda:</label>
+          <div class="date-range">
+            <input type="text" id="dataInicio" placeholder="dd/mm/aaaa" maxlength="10">
+            <span>até</span>
+            <input type="text" id="dataFim" placeholder="dd/mm/aaaa" maxlength="10">
+          </div>
+        </div>
+
+        <div class="campo">
+          <label>Data de Vencimento:</label>
+          <div class="date-range">
+            <input type="text" id="vencimentoInicio" placeholder="dd/mm/aaaa" maxlength="10">
+            <span>até</span>
+            <input type="text" id="vencimentoFim" placeholder="dd/mm/aaaa" maxlength="10">
+          </div>
+        </div>
+      </div>
+
+      <div class="buttons">
+        <button id="buscar"><i class="fas fa-search"></i> Buscar</button>
+        <button id="limpar"><i class="fas fa-broom"></i> Limpar</button>
       </div>
     </div>
-    
-    <div class="campo">
-      <label>Data de Vencimento:</label>
-      <div class="linha">
-        <input type="date" id="dataInicioVenc">
-        <span>até</span>
-        <input type="date" id="dataFimVenc">
-      </div>
+
+    <h2>Resultados</h2>
+
+    <div class="table-container">
+      <table id="tabela-vendas" class="tabela-venda">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Cliente</th>
+            <th>Data da Venda</th>
+            <th>Vencimento</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Resultados inseridos via JS -->
+        </tbody>
+      </table>
     </div>
 
-    <button onclick="buscarRelatorio()">
-      <i class="fas fa-search"></i> Buscar
-    </button>
+    <div class="resumo-venda">
+      <p id="totalRelatorio"></p>
+      <p id="mensagem"></p>
+    </div>
+   
 
-  </div>
+    <div class="menu">
+      <button onclick="irPara('../venda/venda.html')">
+        <i class="fas fa-cash-register"></i> Nova Venda
+      </button>
+      <button onclick="irPara('../dashboard/dashboard.html')">
+        <i class="fas fa-home"></i> Início
+      </button>
+      <button onclick="logout()">
+        <i class="fas fa-sign-out-alt"></i> Sair
+      </button>
+    </div>
 
+    <script src="relatorio.js"></script>
 
-
-  <div id="resultadoRelatorio"></div>
-
-  <div class="menu">
-    <button onclick="irPara('../dashboard/dashboard.html')">
-      <i class="fas fa-home"></i> Início
-    </button>
-    <button onclick="logout()">
-      <i class="fas fa-sign-out-alt"></i> Sair
-    </button>
-  </div>
-
-  <script src="relatorio.js"></script>
-</body>
+  </body>
 </html>

@@ -1,127 +1,138 @@
-// Verifica login
-if (!localStorage.getItem('usuarioLogado')) {
-  window.location.href = '../login/login.html';
-}
-
 let itensVenda = [];
-document.getElementById('cliente').removeAttribute('disabled');
 let clienteSelecionadoId = null;
 let produtoSelecionadoId = null;
 let precoSelecionado = null;
 
-document.addEventListener('DOMContentLoaded', async () => {
+let sugestoesClienteDiv;
+let sugestoesProdutoDiv;
+
+document.addEventListener('DOMContentLoaded', () => {
   const inputCliente = document.getElementById('cliente');
   const inputProduto = document.getElementById('produto');
   const quantidadeInput = document.getElementById('quantidade');
-  const listaItens = document.getElementById('itens');
   const mensagem = document.getElementById('mensagem');
   const btnAdicionar = document.getElementById('adicionar');
   const btnFinalizar = document.getElementById('finalizar');
-  document.getElementById('cliente').removeAttribute('disabled');
-  document.getElementById('cliente').value = '';
-  clienteSelecionadoId = null;
+  const vencimentoInput = document.getElementById('vencimento');
 
+  if (!inputCliente || !inputProduto || !quantidadeInput || !mensagem || !btnAdicionar || !btnFinalizar || !vencimentoInput) {
+    console.error('Erro ao carregar elementos do DOM.');
+    return;
+  }
+
+  sugestoesClienteDiv = criarOuObterSugestoesDiv(inputCliente);
+  sugestoesProdutoDiv = criarOuObterSugestoesDiv(inputProduto);
+
+  resetarCamposVenda();
 
   // Autocompletar clientes
-  const sugestoesCliente = criarSugestoes(inputCliente);
   inputCliente.addEventListener('input', async () => {
     const termo = inputCliente.value.trim();
     clienteSelecionadoId = null;
-    limparSugestoes(sugestoesCliente);
-
+    limparSugestoes(sugestoesClienteDiv);
     if (termo.length < 2) return;
-    const clientes = await window.electronAPI.buscarClientesPorNome(termo);
 
-    clientes.forEach(cliente => {
-      const div = document.createElement('div');
-      div.textContent = cliente.nome;
-      div.classList.add('sugestao');
-      div.onclick = () => {
-        inputCliente.value = cliente.nome;
-        clienteSelecionadoId = cliente.id;
-        limparSugestoes(sugestoesCliente);
-      };
-      sugestoesCliente.appendChild(div);
-    });
-    posicionarSugestoes(inputCliente, sugestoesCliente);
+    try {
+      const clientes = await window.electronAPI.buscarClientesPorNome(termo);
+      if (clientes.length === 0) return;
+
+      clientes.forEach(cliente => {
+        const div = document.createElement('div');
+        div.textContent = `${cliente.nome} (${cliente.observacao || 'Sem observação'})`;
+        div.classList.add('sugestao');
+        div.onclick = () => {
+          inputCliente.value = cliente.nome;
+          clienteSelecionadoId = cliente.id;
+          limparSugestoes(sugestoesClienteDiv);
+        };
+        sugestoesClienteDiv.appendChild(div);
+      });
+      posicionarSugestoes(inputCliente, sugestoesClienteDiv);
+    } catch (error) {
+      console.error('Erro ao buscar clientes:', error);
+      exibirMensagem('Erro ao buscar clientes.', 'red');
+    }
   });
 
   // Autocompletar produtos
-  const sugestoesProduto = criarSugestoes(inputProduto);
   inputProduto.addEventListener('input', async () => {
     const termo = inputProduto.value.trim();
     produtoSelecionadoId = null;
     precoSelecionado = null;
-    limparSugestoes(sugestoesProduto);
-
+    limparSugestoes(sugestoesProdutoDiv);
     if (termo.length < 2) return;
-    const produtos = await window.electronAPI.buscarProdutosPorNome(termo);
 
-    produtos.forEach(prod => {
-      const div = document.createElement('div');
-      div.textContent = `${prod.nome} - R$ ${parseFloat(prod.preco).toFixed(2).replace('.', ',')}`;
-      div.classList.add('sugestao');
-      div.onclick = () => {
-        inputProduto.value = prod.nome;
-        produtoSelecionadoId = prod.id;
-        precoSelecionado = parseFloat(prod.preco);
-        limparSugestoes(sugestoesProduto);
-      };
-      sugestoesProduto.appendChild(div);
-    });
-    posicionarSugestoes(inputProduto, sugestoesProduto);
+    try {
+      const produtos = await window.electronAPI.buscarProdutosPorNome(termo);
+      if (produtos.length === 0) return;
+
+      produtos.forEach(prod => {
+        const div = document.createElement('div');
+        div.textContent = `${prod.nome} - R$ ${parseFloat(prod.preco).toFixed(2).replace('.', ',')}`;
+        div.classList.add('sugestao');
+        div.onclick = () => {
+          inputProduto.value = prod.nome;
+          produtoSelecionadoId = prod.id;
+          precoSelecionado = parseFloat(prod.preco);
+          limparSugestoes(sugestoesProdutoDiv);
+        };
+        sugestoesProdutoDiv.appendChild(div);
+      });
+      posicionarSugestoes(inputProduto, sugestoesProdutoDiv);
+    } catch (error) {
+      console.error('Erro ao buscar produtos:', error);
+      exibirMensagem('Erro ao buscar produtos.', 'red');
+    }
   });
 
   // Adicionar item à venda
   btnAdicionar.addEventListener('click', () => {
     const quantidade = parseInt(quantidadeInput.value);
-
+    const vencimento = vencimentoInput.value;
     if (!produtoSelecionadoId || isNaN(quantidade) || quantidade < 1) {
-      mensagem.textContent = 'Preencha produto válido e quantidade.';
-      mensagem.style.color = 'red';
+      exibirMensagem('Preencha produto válido e quantidade.', 'red');
       return;
     }
 
-    // Bloqueia o campo cliente após o primeiro item ser adicionado
     if (itensVenda.length === 0) {
-      const clienteInput = document.getElementById('cliente');
-      clienteInput.setAttribute('disabled', 'true');
+      inputCliente.setAttribute('disabled', 'true');
+      limparSugestoes(sugestoesClienteDiv);
     }
 
     const item = {
       produto_id: produtoSelecionadoId,
       nome: inputProduto.value,
       quantidade,
-      preco_unitario: precoSelecionado
+      preco_unitario: precoSelecionado,
+      vencimento
     };
 
     itensVenda.push(item);
     atualizarLista();
-    mensagem.textContent = '';
+    exibirMensagem('');
     inputProduto.value = '';
     quantidadeInput.value = '1';
     produtoSelecionadoId = null;
     precoSelecionado = null;
+    limparSugestoes(sugestoesProdutoDiv);
   });
-
 
   // Finalizar venda
   btnFinalizar.addEventListener('click', async () => {
     if (!clienteSelecionadoId || itensVenda.length === 0) {
-      mensagem.textContent = 'Selecione cliente e adicione pelo menos um item.';
-      mensagem.style.color = 'red';
+      exibirMensagem('Selecione cliente e adicione pelo menos um item.', 'red');
       return;
     }
 
     const total = itensVenda.reduce((sum, item) => sum + item.quantidade * item.preco_unitario, 0);
-    const agora = new Date();
-    const dataHora = agora.toLocaleString('pt-BR');
-    const vencimento = document.getElementById('vencimento').value;
+    const hoje = new Date();
+    const data = hoje.toISOString().split('T')[0];
+    const vencimento = vencimentoInput.value;
 
     const dadosVenda = {
       cliente_id: clienteSelecionadoId,
       total,
-      data: dataHora,
+      data,
       vencimento,
       itens: itensVenda
     };
@@ -129,82 +140,117 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const resultado = await window.electronAPI.registrarVenda(dadosVenda);
       if (resultado.success) {
-        mensagem.textContent = 'Venda registrada com sucesso!';
-        mensagem.style.color = 'green';
-        itensVenda = [];
-        atualizarLista();
-
-        // 🔁 Resetar campos para nova venda
-        document.getElementById('cliente').removeAttribute('disabled');
-        document.getElementById('cliente').value = '';
-        clienteSelecionadoId = null;
-
-        document.getElementById('produto').value = '';
-        document.getElementById('quantidade').value = '1';
-        produtoSelecionadoId = null;
-        precoSelecionado = null;
+        exibirMensagem('Venda registrada com sucesso!', 'green');
+        resetarCamposVenda();
       } else {
-        mensagem.textContent = 'Erro ao registrar venda.';
-        mensagem.style.color = 'red';
+        exibirMensagem(resultado.message || 'Erro ao registrar venda.', 'red');
       }
     } catch (error) {
       console.error('Erro ao registrar venda:', error);
-      mensagem.textContent = 'Erro interno.';
-      mensagem.style.color = 'red';
+      exibirMensagem('Erro interno ao registrar venda.', 'red');
     }
   });
-
-  function atualizarLista() {
-    const tabela = document.getElementById('itens');
-    tabela.innerHTML = '';
-    let total = 0;
-
-    itensVenda.forEach((item, index) => {
-      const subtotal = item.quantidade * item.preco_unitario;
-      total += subtotal;
-
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${item.nome}</td>
-        <td>${item.quantidade}</td>
-        <td>R$ ${item.preco_unitario.toFixed(2).replace('.', ',')}</td>
-        <td>R$ ${subtotal.toFixed(2).replace('.', ',')}</td>
-        <td>
-          <button class="btn-remover" title="Remover item" data-index="${index}">
-            <i class="fas fa-trash-alt"></i>
-          </button>
-        </td>
-      `;
-      tabela.appendChild(tr);
-    });
-
-    const totalVenda = document.getElementById('totalVenda');
-    totalVenda.textContent = itensVenda.length > 0
-      ? `Total da Venda: R$ ${total.toFixed(2).replace('.', ',')}`
-      : '';
-
-    document.querySelectorAll('.btn-remover').forEach(btn => {
-      btn.onclick = (e) => {
-        const index = e.currentTarget.dataset.index;
-        if (confirm('Deseja remover este item?')) {
-          itensVenda.splice(index, 1);
-          atualizarLista();
-        }
-      };
-    });
-  }
 });
 
-// Utilitários de autocompletar
-function criarSugestoes(input) {
-  const box = document.createElement('div');
-  box.className = 'sugestoes-box';
+// Máscara de data no campo vencimento
+const vencimentoInput = document.getElementById('vencimento');
+vencimentoInput.addEventListener('input', () => {
+  let valor = vencimentoInput.value.replace(/\D/g, '');
+  if (valor.length > 2 && valor.length <= 4) {
+    valor = valor.replace(/(\d{2})(\d{1,2})/, '$1/$2');
+  } else if (valor.length > 4) {
+    valor = valor.replace(/(\d{2})(\d{2})(\d{1,4})/, '$1/$2/$3');
+  }
+  vencimentoInput.value = valor;
+});
+
+// Atualiza tabela de itens e trata reativação de campos
+function atualizarLista() {
+  const tabela = document.getElementById('itens');
+  const totalVenda = document.getElementById('totalVenda');
+  const inputCliente = document.getElementById('cliente');
+  tabela.innerHTML = '';
+  let total = 0;
+
+  itensVenda.forEach((item, index) => {
+    const subtotal = item.quantidade * item.preco_unitario;
+    total += subtotal;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${item.nome}</td>
+      <td>${item.quantidade}</td>
+      <td>R$ ${item.preco_unitario.toFixed(2).replace('.', ',')}</td>
+      <td>R$ ${subtotal.toFixed(2).replace('.', ',')}</td>
+      <td>${item.vencimento}</td>
+      <td>
+        <button class="btn-remover" title="Remover item" data-index="${index}">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+      </td>
+    `;
+    tabela.appendChild(tr);
+  });
+
+  totalVenda.textContent = itensVenda.length > 0
+    ? `Total da Venda: R$ ${total.toFixed(2).replace('.', ',')}`
+    : '';
+
+  const vencimento = document.getElementById('vencimento').value;
+  const vencimentoDisplay = document.getElementById('vencimentoDisplay');
+
+  if (itensVenda.length > 0 && vencimentoDisplay) {
+    vencimentoDisplay.textContent = `Vencimento: ${vencimento || 'Não informado'}`;
+  } else if (vencimentoDisplay) {
+    vencimentoDisplay.textContent = '';
+  }
+
+  document.querySelectorAll('.btn-remover').forEach(btn => {
+    btn.onclick = (e) => {
+      const index = e.currentTarget.dataset.index;
+      if (confirm('Deseja remover este item?')) {
+        itensVenda.splice(index, 1);
+        atualizarLista();
+      }
+    };
+  });
+
+  if (itensVenda.length === 0) {
+    inputCliente.removeAttribute('disabled');
+    forceRedraw(inputCliente);
+    inputCliente.focus();
+    clienteSelecionadoId = null;
+  }
+}
+
+// Força re-renderização visual do campo (corrige bug de foco visual no Electron)
+function forceRedraw(element) {
+  element.style.visibility = 'hidden';
+  element.offsetHeight;
+  element.style.visibility = 'visible';
+}
+
+// Exibe mensagem colorida
+function exibirMensagem(texto, cor) {
+  const mensagem = document.getElementById('mensagem');
+  if (mensagem) {
+    mensagem.textContent = texto;
+    mensagem.style.color = cor;
+  }
+}
+
+// Utilitários de sugestão/autocomplete
+function criarOuObterSugestoesDiv(inputElement) {
+  let box = document.getElementById(`sugestoes-${inputElement.id}`);
+  if (!box) {
+    box = document.createElement('div');
+    box.id = `sugestoes-${inputElement.id}`;
+    document.body.appendChild(box);
+  }
+  box.classList.add('sugestoes-box');
   box.style.position = 'absolute';
-  box.style.background = '#fff';
-  box.style.border = '1px solid #ccc';
   box.style.display = 'none';
-  box.style.zIndex = '999';
-  document.body.appendChild(box);
+  box.style.zIndex = '1000';
   return box;
 }
 
@@ -221,22 +267,39 @@ function posicionarSugestoes(input, box) {
   box.style.display = 'block';
 }
 
+// Reseta todos os campos da venda
 function resetarCamposVenda() {
-  document.getElementById('cliente').removeAttribute('disabled');
-  document.getElementById('cliente').value = '';
+  const inputCliente = document.getElementById('cliente');
+  const inputProduto = document.getElementById('produto');
+  const quantidadeInput = document.getElementById('quantidade');
+  const vencimentoInput = document.getElementById('vencimento');
+  const totalVendaDisplay = document.getElementById('totalVenda');
+  const mensagemDisplay = document.getElementById('mensagem');
+  const vencimentoDisplay = document.getElementById('vencimentoDisplay');
+
+  inputCliente.removeAttribute('disabled');
+  forceRedraw(inputCliente);
+  inputCliente.value = '';
   clienteSelecionadoId = null;
 
-  document.getElementById('produto').value = '';
-  document.getElementById('quantidade').value = '1';
+  inputProduto.value = '';
+  quantidadeInput.value = '1';
   produtoSelecionadoId = null;
   precoSelecionado = null;
-  
+  vencimentoInput.value = '';
+
   itensVenda = [];
   atualizarLista();
+
+  if (totalVendaDisplay) totalVendaDisplay.textContent = '';
+  if (mensagemDisplay) mensagemDisplay.textContent = '';
+  if (vencimentoDisplay) vencimentoDisplay.textContent = '';
+
+  if (sugestoesClienteDiv) limparSugestoes(sugestoesClienteDiv);
+  if (sugestoesProdutoDiv) limparSugestoes(sugestoesProdutoDiv);
 }
 
-
-// Navegação
+// Navegação (se precisar no futuro)
 function irPara(pagina) {
   window.location.href = pagina;
 }
