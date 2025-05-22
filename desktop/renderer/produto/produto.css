@@ -1,100 +1,67 @@
-body {
-  font-family: Arial, sans-serif;
-  background-color: rgba(238, 255, 0, 0.911);
-  padding: 30px;
+/* Container da Tabela */
+#produtosContainer {
+  margin-top: 30px;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Tabela */
+#tabelaProdutos {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 15px;
+}
+
+#tabelaProdutos th {
+  background-color: #0078d7;
+  color: white;
+  padding: 12px;
   text-align: center;
-  color: #333;
-}
-
-/* Botões */
-button {
-  padding: 10px 20px;
-  margin: 5px;
-  background-color: #0078d7;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #005fa3;
-}
-.top-bar {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  padding-bottom: 20px;
-}
-
-.top-bar button {
-  padding: 8px 15px;
-  background-color: #0078d7;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-}
-
-.top-bar button:hover {
-  background-color: #005fa3;
-}
-
-
-.formulario {
-  max-width: 400px;
-  margin: 0 auto;
-  text-align: left;
-}
-
-label {
-  display: block;
-  margin-bottom: 5px;
   font-weight: bold;
 }
 
-input {
-  width: 100%;
+#tabelaProdutos td {
+  border: 1px solid #ddd;
   padding: 10px;
-  margin-bottom: 15px;
-  border-radius: 4px;
+  text-align: center;
+}
+
+#tabelaProdutos input[type="text"],
+#tabelaProdutos input[type="number"] {
+  width: 100%;
+  padding: 6px 8px;
   border: 1px solid #ccc;
+  border-radius: 6px;
   box-sizing: border-box;
 }
 
-button[type="submit"] {
-  width: 100%;
+/* Botões na tabela */
+#tabelaProdutos button {
+  padding: 6px 12px;
+  margin: 2px;
   background-color: #28a745;
   color: white;
-  font-size: 16px;
-  padding: 12px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
 }
 
-button[type="submit"]:hover {
+#tabelaProdutos button:hover {
   background-color: #218838;
 }
 
-.menu {
-  margin-top: 30px;
+#tabelaProdutos button:nth-child(2) {
+  background-color: #dc3545;
 }
 
-.menu button {
-  padding: 10px 20px;
-  margin: 10px;
-  background-color: #0078d7;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.menu button:hover {
-  background-color: #005fa3;
+#tabelaProdutos button:nth-child(2):hover {
+  background-color: #c82333;
 }

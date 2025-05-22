@@ -1,105 +1,62 @@
-body {
-  font-family: Arial, sans-serif;
-  background-color: rgba(238, 255, 0, 0.911);
-  padding: 30px;
-  color: #333;
+/* Container da Tabela */
+#clientesContainer {
+  max-width: 900px;
+  margin: 30px auto;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Tabela */
+#tabelaClientes {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 15px;
+}
+
+#tabelaClientes th {
+  background-color: #0078d7;
+  color: white;
+  padding: 12px;
   text-align: center;
 }
 
-h1 {
-  margin-bottom: 30px;
-}
-
-/* Botões */
-button {
-  padding: 10px 20px;
-  margin: 5px;
-  background-color: #0078d7;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #005fa3;
-}
-
-.top-bar {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  padding-bottom: 20px;
-}
-
-.top-bar button {
-  padding: 8px 15px;
-  background-color: #0078d7;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-}
-
-.top-bar button:hover {
-  background-color: #005fa3;
-}
-
-
-.formulario {
-  max-width: 400px;
-  margin: 0 auto;
-  text-align: left;
-}
-
-label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-}
-
-input, textarea {
-  width: 100%;
+#tabelaClientes td {
+  border: 1px solid #ddd;
   padding: 10px;
-  margin-bottom: 15px;
-  border-radius: 4px;
+  text-align: center;
+}
+
+#tabelaClientes input[type="text"] {
+  width: 100%;
+  padding: 6px 8px;
   border: 1px solid #ccc;
+  border-radius: 6px;
   box-sizing: border-box;
 }
 
-button[type="submit"] {
-  width: 100%;
+/* Botões na tabela */
+#tabelaClientes button {
+  padding: 6px 12px;
+  margin: 2px;
   background-color: #28a745;
   color: white;
-  font-size: 16px;
-  padding: 12px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  font-size: 14px;
 }
 
-button[type="submit"]:hover {
+#tabelaClientes button:hover {
   background-color: #218838;
 }
 
-.menu {
-  margin-top: 40px;
+#tabelaClientes button:nth-child(2) {
+  background-color: #dc3545;
 }
 
-.menu button {
-  padding: 10px 20px;
-  margin: 10px;
-  background-color: #0078d7;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.menu button:hover {
-  background-color: #005fa3;
+#tabelaClientes button:nth-child(2):hover {
+  background-color: #c82333;
 }

@@ -2,12 +2,13 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Pitstop - Clientes</title>
+  <title>Pitstop - Cadastro de Clientes</title>
 
   <!-- Font Awesome para ícones -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-  <!-- Estilo -->
+  <!-- Estilos -->
+  <link rel="stylesheet" href="../assets/css/styles.css">
   <link rel="stylesheet" href="cliente.css">
 </head>
 <body>
@@ -20,31 +21,59 @@
       <i class="fas fa-sign-out-alt"></i> Sair
     </button>
   </div>
-  
+
   <h1>Cadastro de Clientes</h1>
 
   <form id="clienteForm" class="formulario">
-    <label for="nome">Nome:</label>
-    <input type="text" id="nome" required>
+    <div class="form-linha">
+      <div class="campo">
+        <label for="nome">Nome:</label>
+        <input type="text" id="nome" required>
+      </div>
 
-    <label for="telefone">Telefone:</label>
-    <input type="text" id="telefone" placeholder="(XX) XXXXX-XXXX">
+      <div class="campo">
+        <label for="telefone">Telefone:</label>
+        <input type="text" id="telefone" placeholder="(XX) XXXXX-XXXX">
+      </div>
 
-    <label for="observacao">Observação:</label>
-    <textarea id="observacao" rows="4"></textarea>
+      <div class="campo">
+        <label for="observacao">Observação:</label>
+        <input type="text" id="observacao" placeholder="Observações adicionais">
+      </div>
 
-    <button type="submit"><i class="fas fa-save"></i> Salvar Cliente</button>
+      <div class="campo botao">
+        <label>&nbsp;</label>
+        <button type="submit"><i class="fas fa-save"></i> Salvar Cliente</button>
+      </div>
+    </div>
   </form>
 
-  <p id="mensagem"  style="text-align: center; font-size: 18px; font-weight: bold; margin-top: 10px;"></p>
+  <div class="formulario">
+    <button type="button" class="btn-secundario" id="btnClientesCadastrados">
+      <i class="fas fa-users"></i> Clientes Cadastrados
+    </button>
+  </div>
 
-  <div class="menu">
-    <button onclick="irPara('../dashboard/dashboard.html')">
-      <i class="fas fa-home"></i> Início
-    </button>
-    <button onclick="logout()">
-      <i class="fas fa-sign-out-alt"></i> Sair
-    </button>
+  <p id="mensagem" style="text-align: center; font-size: 18px; font-weight: bold; margin-top: 10px;"></p>
+
+
+  <!-- Tabela de clientes -->
+  <div id="clientesContainer" style="margin-top: 30px; display: none;">
+    <h2>Clientes Cadastrados</h2>
+    <table id="tabelaClientes">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nome</th>
+          <th>Telefone</th>
+          <th>Observação</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Conteúdo inserido via JavaScript -->
+      </tbody>
+    </table>
   </div>
 
   <script src="cliente.js"></script>

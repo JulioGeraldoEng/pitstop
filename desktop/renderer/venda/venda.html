@@ -3,11 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <title>Pitstop - Registrar Venda</title>
+
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <link rel="stylesheet" href="../assets/css/styles.css">
   <link rel="stylesheet" href="venda.css">
 </head>
 <body>
-  
+
   <div class="top-bar">
     <button type="button" onclick="irPara('../dashboard/dashboard.html')">
       <i class="fas fa-home"></i> Início
@@ -16,89 +19,75 @@
       <i class="fas fa-sign-out-alt"></i> Sair
     </button>
   </div>
-  
-  
-  
-  <header>
-    <h1>Registrar Venda</h1>
-  </header>
 
-  <main>
-    <section class="form-container">
-      <form id="formVenda" onsubmit="return false;">
-        <div class="form-group">
-          <label for="cliente">Cliente:</label>
-          <div id="cliente-input-container">
-            <input type="text" id="cliente" name="cliente" placeholder="Nome do cliente" autocomplete="off">
-          </div>
-          <div id="sugestoes-cliente" class="sugestoes"></div>
-        </div>
+  <h1>Registrar Venda</h1>
 
-        <div class="form-group">
-          <label for="produto">Produtos:</label>
-          <div id="produto-input-container">
-            <input type="text" id="produto" name="produto" placeholder="Nome do produto" autocomplete="off">
-          </div>
-          <div id="sugestoes-produto" class="sugestoes"></div>
-        </div>
-
-        <div class="form-group">
-          <label for="quantidade">Quantidade:</label>
-          <input type="number" id="quantidade" name="quantidade" min="1" value="1">
-        </div>
-
-        <div class="form-group">
-          <label for="vencimento">Data de vencimento:</label>
-          <input type="text" id="vencimento" name="vencimento" placeholder="dd/mm/aaaa" maxlength="10">
-        </div>
-
-        <div class="buttons">
-          <button type="button" id="adicionar">
-            <i class="fas fa-plus-circle"></i> Adicionar Item
-          </button>
-          <button type="button" id="finalizar">
-            <i class="fas fa-check-circle"></i> Finalizar Venda
-          </button>
-        </div>
-      </form>
-    </section>
-
-    <section class="itens-venda">
-      <h2>Itens da Venda</h2>
-      <div class="table-container">
-        <table id="tabelaItens" class="tabela-venda">
-          <thead>
-            <tr>
-              <th>Produto</th>
-              <th>Qtd</th>
-              <th>Preço Unitário</th>
-              <th>Subtotal</th>
-              <th>Data de Vencimento</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody id="itens"></tbody>
-        </table>
+  <form id="formVenda" class="formulario">
+    <div class="form-linha">
+      <div class="campo">
+        <label for="cliente">Cliente:</label>
+        <input type="text" id="cliente" name="cliente" placeholder="Nome do cliente" autocomplete="off">
+        <div id="sugestoes-cliente" class="sugestoes"></div>
       </div>
-    </section>
 
-    <section class="resumo-venda">
-      <p id="totalVenda" class="total"></p>
-      <p id="vencimentoDisplay" style="font-weight: bold;"></p>
-      <p id="mensagem" role="alert" aria-live="polite" class="mensagem-status"></p>
-    </section>
-  </main>
+      <div class="campo">
+        <label for="produto">Produto:</label>
+        <input type="text" id="produto" name="produto" placeholder="Nome do produto" autocomplete="off">
+        <div id="sugestoes-produto" class="sugestoes"></div>
+      </div>
 
-  <footer>
-    <nav class="menu">
-      <button type="button" onclick="irPara('../dashboard/dashboard.html')">
-        <i class="fas fa-home"></i> Início
+      <div class="campo">
+        <label for="quantidade">Quantidade:</label>
+        <input type="number" id="quantidade" name="quantidade" min="1" value="1">
+      </div>
+
+      <div class="campo">
+        <label for="vencimento">Vencimento:</label>
+        <input type="text" id="vencimento" name="vencimento" placeholder="dd/mm/aaaa" maxlength="10">
+      </div>
+
+      <div class="campo botao">
+        <label>&nbsp;</label>
+        <button type="button" id="adicionar">
+          <i class="fas fa-plus-circle"></i> Adicionar Item
+        </button>
+      </div>
+    </div>
+
+    <div class="formulario">
+      <button type="button" class="btn-secundario" id="finalizar">
+        <i class="fas fa-check-circle"></i> Finalizar Venda
       </button>
-      <button type="button" onclick="logout()">
-        <i class="fas fa-sign-out-alt"></i> Sair
-      </button>
-    </nav>
-  </footer>
+    </div>
+  </form>
+
+  <p id="mensagem" role="alert" aria-live="polite" class="mensagem-status"></p>
+
+  <div id="tabela-venda" style="display: none; margin-top: 20px;">
+    <h2>Itens da Venda</h2>
+    <table class="tabela-venda">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Produto</th>
+          <th>Preço</th>
+          <th>Quantidade</th>
+          <th>Valor Total</th>
+          <th>Vencimento</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="itens">
+        <!-- Itens inseridos dinamicamente -->
+      </tbody>
+    </table>
+  </div>
+
+
+  <div class="resumo-venda" style="display: none; margin-top: 30px;">
+    <p id="totalVenda" class="total"></p>
+    <p id="vencimentoDisplay" style="font-weight: bold;"></p>
+  </div>
 
   <script src="venda.js"></script>
 </body>

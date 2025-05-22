@@ -1,10 +1,3 @@
-body {
-  font-family: Arial, sans-serif;
-  background-color: rgba(238, 255, 0, 0.911);
-  padding: 30px;
-  color: #333;
-}
-
 /* Botões */
 button {
   padding: 10px 20px;
@@ -18,35 +11,6 @@ button {
 
 button:hover {
   background-color: #005fa3;
-}
-
-.top-bar {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  padding-bottom: 20px;
-}
-
-.top-bar button {
-  padding: 8px 15px;
-  background-color: #0078d7;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-}
-
-.top-bar button:hover {
-  background-color: #005fa3;
-}
-
-
-h1, h2 {
-  text-align: center;
 }
 
 .form-container {
@@ -126,14 +90,6 @@ button#limpar:hover {
   background-color: #d32f2f;
 }
 
-.menu {
-  text-align: center;
-  margin-top: 30px;
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-}
-
 .tabela-venda {
   width: 100%;
   max-width: 1000px;
@@ -160,27 +116,32 @@ button#limpar:hover {
 /* Larguras proporcionais */
 .tabela-venda th:nth-child(1),
 .tabela-venda td:nth-child(1) {
-  width: 10%; /* ID */
+  width: 5%; /* ID */
 }
 
 .tabela-venda th:nth-child(2),
 .tabela-venda td:nth-child(2) {
-  width: 30%; /* Cliente */
+  width: 20%; /* Cliente */
 }
 
 .tabela-venda th:nth-child(3),
 .tabela-venda td:nth-child(3) {
-  width: 20%; /* Data da Venda */
+  width: 20%; /* Observação */
 }
 
 .tabela-venda th:nth-child(4),
 .tabela-venda td:nth-child(4) {
-  width: 20%; /* Vencimento */
+  width: 20%; /* Data da Venda */
 }
 
 .tabela-venda th:nth-child(5),
 .tabela-venda td:nth-child(5) {
-  width: 20%; /* Total */
+  width: 20%; /* Vencimento */
+}
+
+.tabela-venda th:nth-child(6),
+.tabela-venda td:nth-child(6) {
+  width: 15%; /* Total */
 }
 
 .resumo-venda {
@@ -267,4 +228,28 @@ button#limpar:hover {
 .container-centralizado {
   max-width: 400px;
   margin: 0 auto 30px;
+}
+#tabela-relatorio {
+  margin-top: 30px;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tabela-venda th {
+  background-color: #0078d7;
+  color: white;
+}
+
+.tabela-venda th,
+.tabela-venda td {
+  border: 1px solid #ccc;
+  padding: 4px 6px;
+  text-align: center;
+  line-height: 1.2;
+  font-size: 14px;
 }

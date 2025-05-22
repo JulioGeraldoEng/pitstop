@@ -154,6 +154,38 @@ ipcMain.handle('get-clientes', async () => {
   });
 });
 
+// Atualizar cliente
+ipcMain.handle('atualizar-cliente', async (event, cliente) => {
+  return new Promise((resolve, reject) => {
+    const { id, nome, telefone, observacao } = cliente;
+    const query = `UPDATE clientes SET nome = ?, telefone = ?, observacao = ? WHERE id = ?`;
+    db.run(query, [nome, telefone, observacao, id], function (err) {
+      if (err) {
+        console.error('Erro ao atualizar cliente:', err.message);
+        return resolve({ success: false, message: 'Erro ao atualizar cliente.' });
+      }
+      resolve({ success: this.changes > 0 });
+    });
+  });
+});
+
+// Excluir cliente
+ipcMain.handle('excluir-cliente', async (event, id) => {
+  return new Promise((resolve, reject) => {
+    const query = `DELETE FROM clientes WHERE id = ?`;
+    db.run(query, [id], function (err) {
+      if (err) {
+        console.error('Erro ao excluir cliente:', err.message);
+        return resolve({ success: false, message: 'Erro ao excluir cliente.' });
+      }
+      resolve({ success: this.changes > 0 });
+    });
+  });
+});
+
+
+
+
 // Produtos
 ipcMain.handle('buscar-produtos-por-nome', async (event, termo) => {
   return new Promise((resolve, reject) => {
@@ -184,77 +216,124 @@ ipcMain.handle('salvar-produto', async (event, produto) => {
   });
 });
 
-ipcMain.handle('get-produtos', async () => {
+ipcMain.handle('buscar-todos-produtos', async () => {
   return new Promise((resolve, reject) => {
     db.all(`SELECT id, nome, preco, quantidade FROM produtos ORDER BY nome`, (err, rows) => {
       if (err) {
         console.error('Erro ao buscar todos os produtos:', err.message);
-        return reject([]);
+        return reject([]); // ou resolve([]) se preferir
       }
       resolve(rows);
     });
   });
 });
 
-// Vendas
+ipcMain.handle('atualizar-produto', async (event, produto) => {
+  return new Promise((resolve) => {
+    const stmt = db.prepare('UPDATE produtos SET nome = ?, preco = ?, quantidade = ? WHERE id = ?');
+    stmt.run([produto.nome, produto.preco, produto.quantidade, produto.id], function (err) {
+      if (err) {
+        console.error('Erro ao atualizar produto:', err.message);
+        return resolve({ success: false, message: 'Erro ao atualizar produto.' });
+      }
+      resolve({ success: this.changes > 0 });
+    });
+  });
+});
+
+ipcMain.handle('excluir-produto', async (event, id) => {
+  return new Promise((resolve) => {
+    const stmt = db.prepare('DELETE FROM produtos WHERE id = ?');
+    stmt.run(id, function (err) {
+      if (err) {
+        console.error('Erro ao excluir produto:', err.message);
+        return resolve({ success: false, message: 'Erro ao excluir produto.' });
+      }
+      resolve({ success: this.changes > 0 });
+    });
+  });
+});
+
+
+
 ipcMain.handle('registrar-venda', async (event, dadosVenda) => {
   return new Promise((resolve, reject) => {
     const { cliente_id, total, data, vencimento, itens } = dadosVenda;
 
-    // Função auxiliar para formatar a data de vencimento para YYYY-MM-DD
     const formatarVencimentoParaDB = (dataString) => {
-      if (!dataString || dataString.length !== 10 || dataString.indexOf('/') === -1) {
-        return null;
-      }
+      if (!dataString || dataString.length !== 10 || dataString.indexOf('/') === -1) return null;
       const [dia, mes, ano] = dataString.split('/');
       return `${ano}-${mes}-${dia}`;
     };
 
-    const vencimentoFormatado = vencimento ? formatarVencimentoParaDB(vencimento) : null; // Se vencimento for opcional
+    const vencimentoFormatado = vencimento ? formatarVencimentoParaDB(vencimento) : null;
 
     db.run(`INSERT INTO vendas (cliente_id, data, data_vencimento, total) VALUES (?, ?, ?, ?)`,
       [cliente_id, data, vencimentoFormatado, total],
       function (err) {
         if (err) {
           console.error('Erro ao inserir venda:', err.message);
-          return reject({ success: false, message: 'Erro ao registrar venda.' });
+          return resolve({ success: false, message: 'Erro ao registrar venda.' });
         }
 
         const venda_id = this.lastID;
 
-        // Inserir itens da venda e atualizar estoque de produtos
-        db.serialize(() => { // Usar serialize para garantir ordem e transação (opcional, mas bom para estoque)
-          const stmtItensVenda = db.prepare(`INSERT INTO itens_venda (venda_id, produto_id, quantidade, preco_unitario) VALUES (?, ?, ?, ?)`);
-          const stmtUpdateEstoque = db.prepare(`UPDATE produtos SET quantidade = quantidade - ? WHERE id = ?`);
+        let erroInterno = false;
+        let inseridos = 0;
 
-          for (const item of itens) {
-            stmtItensVenda.run(venda_id, item.produto_id, item.quantidade, item.preco_unitario);
-            stmtUpdateEstoque.run(item.quantidade, item.produto_id); // Decrementa estoque
+        const stmtItensVenda = db.prepare(`INSERT INTO itens_venda (venda_id, produto_id, quantidade, preco_unitario) VALUES (?, ?, ?, ?)`);
+        const stmtUpdateEstoque = db.prepare(`UPDATE produtos SET quantidade = quantidade - ? WHERE id = ?`);
+
+        for (const item of itens) {
+          stmtItensVenda.run([venda_id, item.produto_id, item.quantidade, item.preco_unitario], function (err) {
+            if (err) {
+              console.error('Erro ao inserir item de venda:', err.message);
+              erroInterno = true;
+            }
+            inseridos++;
+            if (inseridos === itens.length * 2) finalizar();
+          });
+
+          stmtUpdateEstoque.run([item.quantidade, item.produto_id], function (err) {
+            if (err) {
+              console.error('Erro ao atualizar estoque:', err.message);
+              erroInterno = true;
+            }
+            inseridos++;
+            if (inseridos === itens.length * 2) finalizar();
+          });
+        }
+
+        function finalizar() {
+          stmtItensVenda.finalize();
+          stmtUpdateEstoque.finalize();
+          if (erroInterno) {
+            return resolve({ success: false, message: 'Erro interno ao registrar venda.' });
           }
-
-          stmtItensVenda.finalize((err) => {
-            if (err) console.error('Erro ao finalizar inserção de itens de venda:', err.message);
-          });
-          stmtUpdateEstoque.finalize((err) => {
-            if (err) console.error('Erro ao finalizar atualização de estoque:', err.message);
-          });
-          resolve({ success: true, message: 'Venda registrada com sucesso!' });
-        });
+          return resolve({ success: true, message: 'Venda registrada com sucesso!' });
+        }
       });
   });
 });
+
 
 ipcMain.handle('buscarVendas', async (event, filtros) => {
   return new Promise((resolve, reject) => {
       const { cliente, dataInicio, dataFim, vencimentoInicio, vencimentoFim } = filtros;
 
       let query = `
-        SELECT v.id, c.nome as cliente, v.data, v.data_vencimento as vencimento, v.total
+        SELECT v.id, c.nome as cliente, c.observacao, v.data, v.data_vencimento as vencimento, v.total
         FROM vendas v
         JOIN clientes c ON c.id = v.cliente_id
         WHERE 1 = 1
       `;
       const params = [];
+
+      // Filtro cliente (nome)
+      if (cliente) {
+        query += " AND c.nome LIKE ?";
+        params.push(`%${cliente}%`);
+      }
 
       const formatarData = (data) => { // Função auxiliar local para esta handler
         if (!data || !/^\d{2}\/\d{2}\/\d{4}$/.test(data)) return null;

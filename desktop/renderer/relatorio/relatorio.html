@@ -4,7 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Relatório de Vendas</title>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <link rel="stylesheet" href="../assets/css/styles.css">
     <link rel="stylesheet" href="relatorio.css">
     <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
   </head>
@@ -26,7 +29,7 @@
       <div class="form-group">
         <div class="campo">
           <label for="cliente">Cliente:</label>
-          <input type="text" id="cliente" placeholder="Digite o nome do cliente">
+          <input type="text" id="cliente" placeholder="Digite o nome do cliente" autocomplete="off">
           <div id="sugestoesCliente" class="sugestoes-box"></div>
         </div>
 
@@ -49,20 +52,25 @@
         </div>
       </div>
 
+      
       <div class="buttons">
         <button id="buscar"><i class="fas fa-search"></i> Buscar</button>
         <button id="limpar"><i class="fas fa-broom"></i> Limpar</button>
+        <button id="novaVenda" onclick="irPara('../venda/venda.html')" style="white-space: nowrap;">
+          <i class="fas fa-cash-register"></i> <span>Nova Venda</span>
+        </button>
       </div>
+
     </div>
 
-    <h2>Resultados</h2>
-
-    <div class="table-container">
+    <div id="tabela-relatorio" style="display: none; margin-top: 20px;">
+      <h2>Resultados</h2>
       <table id="tabela-vendas" class="tabela-venda">
         <thead>
           <tr>
             <th>ID</th>
             <th>Cliente</th>
+            <th>Observação</th>
             <th>Data da Venda</th>
             <th>Vencimento</th>
             <th>Total</th>
@@ -77,19 +85,6 @@
     <div class="resumo-venda">
       <p id="totalRelatorio"></p>
       <p id="mensagem"></p>
-    </div>
-   
-
-    <div class="menu">
-      <button onclick="irPara('../venda/venda.html')">
-        <i class="fas fa-cash-register"></i> Nova Venda
-      </button>
-      <button onclick="irPara('../dashboard/dashboard.html')">
-        <i class="fas fa-home"></i> Início
-      </button>
-      <button onclick="logout()">
-        <i class="fas fa-sign-out-alt"></i> Sair
-      </button>
     </div>
 
     <script src="relatorio.js"></script>

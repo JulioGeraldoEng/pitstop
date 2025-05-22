@@ -1,68 +1,52 @@
-/* Estilo geral do corpo da página */
-body {
-  font-family: Arial, sans-serif;
-  background-color: rgba(238, 255, 0, 0.911);
-  padding: 30px;
-  color: #333;
-}
-
-.top-bar {
+/* Campos agrupados em linha (padrão do sistema) */
+.form-linha {
   display: flex;
-  gap: 10px;
-  align-items: center;
-  padding-bottom: 20px;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin-bottom: 20px;
 }
 
-.top-bar button {
-  padding: 8px 15px;
-  background-color: #0078d7;
+/* Campo individual */
+.campo {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 150px;
+}
+
+.campo label {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.campo input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+/* Botão dentro do formulário */
+.campo.botao {
+  flex: 0 0 auto;
+}
+
+.campo.botao button {
+  padding: 10px 15px;
+  height: 42px;
+  background-color: #28a745;
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
 }
 
-.top-bar button:hover {
-  background-color: #005fa3;
+.campo.botao button:hover {
+  background-color: #218838;
 }
 
-
-/* Títulos centralizados */
-h1, h2 {
-  text-align: center;
-}
-
-/* Container do formulário */
-.form-container {
-  max-width: 400px;
-  margin: 0 auto 30px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 4px; /* espaço entre o label e o input, opcional */
-}
-
-/* Campos de entrada e seleção */
-input, select {
-  width: 100%;
-  max-width: 300px;
-  padding: 10px;
-  margin-bottom: 10px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  box-sizing: border-box;
-}
-
-#quantidade {
-  width: 100px;
-}
-
-/* Botões */
+/* Botões padrão */
 button {
   padding: 10px 20px;
   margin: 5px;
@@ -77,104 +61,79 @@ button:hover {
   background-color: #005fa3;
 }
 
-/* Menu inferior */
-.menu {
-  text-align: center;
+/* Tabela de venda */
+#tabela-venda1 {
   margin-top: 30px;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+#tabela-venda {
+  margin-top: 30px;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Tabela de itens da venda */
-.tabela-venda {
-  width: 100%;
-  max-width: 1000px;
-  margin: 20px auto;
-  border-collapse: collapse;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
-  background-color: white;
-}
 
 .tabela-venda th,
 .tabela-venda td {
   border: 1px solid #ccc;
-  padding: 2px 4px;
+  padding: 4px 6px;
   text-align: center;
-  font-size: 13px;
-  line-height: 1.0;
+  line-height: 1.2;
 }
 
-/* Cabeçalho da tabela */
 .tabela-venda th {
-  background-color: #f0f0f0;
-  font-weight: bold;
+  background-color: #0078d7;
+  color: white;
 }
 
-/* Larguras proporcionais das colunas */
+/* Colunas específicas */
 .tabela-venda th:nth-child(1),
 .tabela-venda td:nth-child(1) {
-  width: 20%; /* Produto */
+  width: 20%;
 }
 
 .tabela-venda th:nth-child(2),
 .tabela-venda td:nth-child(2) {
-  width: 10%; /* Quantidade */
+  width: 20%;
 }
 
 .tabela-venda th:nth-child(3),
 .tabela-venda td:nth-child(3) {
-  width: 20%; /* Preço Unitário */
+  width: 10%;
 }
 
 .tabela-venda th:nth-child(4),
 .tabela-venda td:nth-child(4) {
-  width: 20%; /* Subtotal */
+  width: 10%;
 }
 
 .tabela-venda th:nth-child(5),
 .tabela-venda td:nth-child(5) {
-  width: 20%; /* Data de Vencimento */
+  width: 10%;
 }
 
-.tabela-venda td:last-child {
-  text-align: center;
+.tabela-venda th:nth-child(6),
+.tabela-venda td:nth-child(6) {
+  width: 10%;
 }
 
-/* Botão de remover item (ícone de lixeira) */
-.btn-remover {
-  background: none;
-  border: none;
-  color: red;
-  font-size: 18px;
-  cursor: pointer;
+.tabela-venda th:nth-child(7),
+.tabela-venda td:nth-child(7) {
+  width: 20%;
 }
 
-.btn-remover:hover {
-  color: darkred;
-}
-
-/* Container dos campos */
-.campo {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  margin-bottom: 15px;
-}
-
-.campo label {
-  font-weight: bold;
-  margin-bottom: 5px;
-}
-
-.campo select,
-.campo input {
-  width: 100%;
-  max-width: 300px;
-  padding: 10px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  box-sizing: border-box;
-}
-
-/* Estilo da seção de resumo */
+/* Resumo */
 .resumo-venda {
   max-width: 400px;
   margin: 20px auto;
@@ -192,33 +151,13 @@ button:hover {
   color: #0742c4;
 }
 
-/* Estilos para sugestões de autocomplete */
-#sugestoes-cliente {
-  border: 1px solid #ccc;
-  background-color: #fff;
-  max-height: 200px;
-  overflow-y: auto;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  position: absolute;
-  z-index: 1000;
-  width: auto;
+/* Autocomplete (cliente e produto) */
+#cliente-input-container,
+#produto-input-container {
+  position: relative;
 }
 
-#sugestoes-cliente .sugestao {
-  padding: 8px 10px;
-  cursor: pointer;
-  border-bottom: 1px solid #eee;
-}
-
-#sugestoes-cliente .sugestao:last-child {
-  border-bottom: none;
-}
-
-#sugestoes-cliente .sugestao:hover {
-  background-color: #f0f0f0;
-}
-
-/* Estilos para sugestões de autocomplete */
+#sugestoes-cliente,
 #sugestoes-produto {
   border: 1px solid #ccc;
   background-color: #fff;
@@ -227,24 +166,34 @@ button:hover {
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   position: absolute;
   z-index: 1000;
-  width: auto;
+  width: 100%;
 }
 
+#sugestoes-cliente .sugestao,
 #sugestoes-produto .sugestao {
   padding: 8px 10px;
   cursor: pointer;
   border-bottom: 1px solid #eee;
 }
 
+#sugestoes-cliente .sugestao:last-child,
 #sugestoes-produto .sugestao:last-child {
   border-bottom: none;
 }
 
+#sugestoes-cliente .sugestao:hover,
 #sugestoes-produto .sugestao:hover {
   background-color: #f0f0f0;
 }
 
-#cliente-input-container,
-#produto-input-container {
-  position: relative;
+/* Campo de quantidade com largura menor */
+#quantidade {
+  max-width: 100px;
+}
+
+.mensagem-status {
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 20px;
 }

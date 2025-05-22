@@ -8,11 +8,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getClientes: () => ipcRenderer.invoke('get-clientes'),
   salvarCliente: (cliente) => ipcRenderer.invoke('salvar-cliente', cliente),
   buscarClientesPorNome: (nome) => ipcRenderer.invoke('buscar-clientes-por-nome', nome),
+  atualizarCliente: (cliente) => ipcRenderer.invoke('atualizar-cliente', cliente),
+  excluirCliente: (id) => ipcRenderer.invoke('excluir-cliente', id),
 
   // Produtos
-  getProdutos: () => ipcRenderer.invoke('get-produtos'),
   salvarProduto: (produto) => ipcRenderer.invoke('salvar-produto', produto),
   buscarProdutosPorNome: (nome) => ipcRenderer.invoke('buscar-produtos-por-nome', nome),
+  buscarTodosProdutos: () => ipcRenderer.invoke('buscar-todos-produtos'),
+  atualizarProduto: (produto) => ipcRenderer.invoke('atualizar-produto', produto),
+  excluirProduto: (id) => ipcRenderer.invoke('excluir-produto', id),
 
   // Vendas
   registrarVenda: (dados) => ipcRenderer.invoke('registrar-venda', dados),

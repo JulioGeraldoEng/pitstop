@@ -13,26 +13,3 @@ button:hover {
   background-color: #005fa3;
 }
 
-.top-bar {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  padding-bottom: 20px;
-}
-
-.top-bar button {
-  padding: 8px 15px;
-  background-color: #0078d7;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-}
-
-.top-bar button:hover {
-  background-color: #005fa3;
-}

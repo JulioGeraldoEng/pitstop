@@ -1,5 +1,6 @@
 let itensVenda = [];
 let clienteSelecionadoId = null;
+let clienteNomeSelecionado = null; // Nova variável para armazenar o nome do cliente
 let produtoSelecionadoId = null;
 let precoSelecionado = null;
 
@@ -14,8 +15,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnAdicionar = document.getElementById('adicionar');
   const btnFinalizar = document.getElementById('finalizar');
   const vencimentoInput = document.getElementById('vencimento');
+  const itensVendaContainer = document.getElementById('tabela-venda'); // Get the new container
+  const resumoVendaDiv = document.querySelector('.resumo-venda');
 
-  if (!inputCliente || !inputProduto || !quantidadeInput || !mensagem || !btnAdicionar || !btnFinalizar || !vencimentoInput) {
+  if (!inputCliente || !inputProduto || !quantidadeInput || !mensagem || !btnAdicionar || !btnFinalizar || !vencimentoInput || !itensVendaContainer || !resumoVendaDiv) {
     console.error('Erro ao carregar elementos do DOM.');
     return;
   }
@@ -23,12 +26,13 @@ document.addEventListener('DOMContentLoaded', () => {
   sugestoesClienteDiv = criarOuObterSugestoesDiv(inputCliente);
   sugestoesProdutoDiv = criarOuObterSugestoesDiv(inputProduto);
 
-  resetarCamposVenda();
+  resetarCamposVenda(); // Ensure containers are hidden on load
 
   // Autocompletar clientes
   inputCliente.addEventListener('input', async () => {
     const termo = inputCliente.value.trim();
     clienteSelecionadoId = null;
+    clienteNomeSelecionado = null; // Limpa o nome do cliente ao digitar
     limparSugestoes(sugestoesClienteDiv);
     if (termo.length < 2) return;
 
@@ -43,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
         div.onclick = () => {
           inputCliente.value = cliente.nome;
           clienteSelecionadoId = cliente.id;
+          clienteNomeSelecionado = cliente.nome; // Armazena o nome do cliente
           limparSugestoes(sugestoesClienteDiv);
         };
         sugestoesClienteDiv.appendChild(div);
@@ -115,10 +120,16 @@ document.addEventListener('DOMContentLoaded', () => {
     produtoSelecionadoId = null;
     precoSelecionado = null;
     limparSugestoes(sugestoesProdutoDiv);
+
+    // Show the table and resumo section when an item is added
+    itensVendaContainer.style.display = 'block';
+    resumoVendaDiv.style.display = 'block';
   });
 
   // Finalizar venda
   btnFinalizar.addEventListener('click', async () => {
+    const resumoVendaDiv = document.querySelector('.resumo-venda');
+
     if (!clienteSelecionadoId || itensVenda.length === 0) {
       exibirMensagem('Selecione cliente e adicione pelo menos um item.', 'red');
       return;
@@ -141,7 +152,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const resultado = await window.electronAPI.registrarVenda(dadosVenda);
       if (resultado.success) {
         exibirMensagem('Venda registrada com sucesso!', 'green');
-        resetarCamposVenda();
+        resetarCamposVenda(); // This will now also hide the table
+        itensVendaContainer.style.display = 'none'; // Ensure table is hidden
+        resumoVendaDiv.style.display = 'none'; // Ensure resumo is hidden
       } else {
         exibirMensagem(resultado.message || 'Erro ao registrar venda.', 'red');
       }
@@ -169,8 +182,18 @@ function atualizarLista() {
   const tabela = document.getElementById('itens');
   const totalVenda = document.getElementById('totalVenda');
   const inputCliente = document.getElementById('cliente');
+  const itensVendaContainer = document.getElementById('tabela-venda');
+  const resumoVendaDiv = document.querySelector('.resumo-venda');
   tabela.innerHTML = '';
   let total = 0;
+
+  if (itensVenda.length === 0) {
+    itensVendaContainer.style.display = 'none';
+    resumoVendaDiv.style.display = 'none';
+  } else {
+    itensVendaContainer.style.display = 'block';
+    resumoVendaDiv.style.display = 'block';
+  }
 
   itensVenda.forEach((item, index) => {
     const subtotal = item.quantidade * item.preco_unitario;
@@ -178,15 +201,14 @@ function atualizarLista() {
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
+      <td>${clienteNomeSelecionado || 'N/A'}</td> 
       <td>${item.nome}</td>
-      <td>${item.quantidade}</td>
       <td>R$ ${item.preco_unitario.toFixed(2).replace('.', ',')}</td>
+      <td>${item.quantidade}</td>
       <td>R$ ${subtotal.toFixed(2).replace('.', ',')}</td>
       <td>${item.vencimento}</td>
       <td>
-        <button class="btn-remover" title="Remover item" data-index="${index}">
-          <i class="fas fa-trash-alt"></i>
-        </button>
+        <button class="btn-remover" onclick="excluirProdutoTabela(${index}, this)"><i class="fas fa-trash-alt"></i></button>
       </td>
     `;
     tabela.appendChild(tr);
@@ -220,6 +242,7 @@ function atualizarLista() {
     forceRedraw(inputCliente);
     inputCliente.focus();
     clienteSelecionadoId = null;
+    clienteNomeSelecionado = null; // Limpa o nome do cliente ao resetar
   }
 }
 
@@ -276,11 +299,14 @@ function resetarCamposVenda() {
   const totalVendaDisplay = document.getElementById('totalVenda');
   const mensagemDisplay = document.getElementById('mensagem');
   const vencimentoDisplay = document.getElementById('vencimentoDisplay');
+  const itensVendaContainer = document.getElementById('tabela-venda');
+  const resumoVendaDiv = document.querySelector('.resumo-venda');
 
   inputCliente.removeAttribute('disabled');
   forceRedraw(inputCliente);
   inputCliente.value = '';
   clienteSelecionadoId = null;
+  clienteNomeSelecionado = null; // Garante que o nome do cliente seja limpo
 
   inputProduto.value = '';
   quantidadeInput.value = '1';
@@ -289,7 +315,7 @@ function resetarCamposVenda() {
   vencimentoInput.value = '';
 
   itensVenda = [];
-  atualizarLista();
+  atualizarLista(); // This will hide the table if itensVenda is empty
 
   if (totalVendaDisplay) totalVendaDisplay.textContent = '';
   if (mensagemDisplay) mensagemDisplay.textContent = '';
@@ -297,6 +323,10 @@ function resetarCamposVenda() {
 
   if (sugestoesClienteDiv) limparSugestoes(sugestoesClienteDiv);
   if (sugestoesProdutoDiv) limparSugestoes(sugestoesProdutoDiv);
+
+  // Explicitly hide the containers on reset
+  if (itensVendaContainer) itensVendaContainer.style.display = 'none';
+  if (resumoVendaDiv) resumoVendaDiv.style.display = 'none';
 }
 
 // Navegação (se precisar no futuro)

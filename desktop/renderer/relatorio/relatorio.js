@@ -86,6 +86,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const vendas = await window.electronAPI.buscarVendas(filtros);
 
       // Limpa a tabela
+      const divTabela = document.getElementById('tabela-relatorio');
+      divTabela.style.display = 'none';
       tabelaVendas.innerHTML = '';
 
       // Preenche a tabela com os resultados
@@ -97,11 +99,13 @@ document.addEventListener('DOMContentLoaded', async () => {
           tr.innerHTML = `
             <td>${venda.id || '-'}</td>
             <td>${venda.cliente || '-'}</td>
+            <td>${venda.observacao || '-'}</td>
             <td>${formatarData(venda.data)}</td>
             <td>${formatarData(venda.vencimento)}</td>
             <td>R$ ${venda.total ? venda.total.toFixed(2).replace('.', ',') : '0,00'}</td>
           `;
           tabelaVendas.appendChild(tr);
+          document.getElementById('tabela-relatorio').style.display = 'block';
           
           if (venda.total) {
             totalGeral += parseFloat(venda.total);
@@ -137,6 +141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     tabelaVendas.innerHTML = '';
     mensagem.textContent = '';
     totalRelatorio.textContent = '';
+    document.getElementById('tabela-relatorio').style.display = 'none';
   });
 });
 
@@ -169,7 +174,7 @@ inputCliente.addEventListener('input', async () => {
     } else {
       resultados.forEach(cliente => {
         const div = document.createElement('div');
-        div.textContent = cliente.nome;
+        div.textContent = `${cliente.nome} (${cliente.observacao || 'Sem observação'})`;
         div.addEventListener('click', () => {
           inputCliente.value = cliente.nome;
           sugestoes.innerHTML = '';

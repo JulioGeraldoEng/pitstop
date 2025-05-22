@@ -11,7 +11,7 @@ document.getElementById('clienteForm').addEventListener('submit', async (e) => {
   const observacao = document.getElementById('observacao').value.trim();
   const mensagem = document.getElementById('mensagem');
 
-  const telefoneLimpo = telefone.replace(/\D/g, ''); // remove tudo que não for número
+  const telefoneLimpo = telefone.replace(/\D/g, '');
 
   if (!nome) {
     mensagem.textContent = 'O nome é obrigatório.';
@@ -20,7 +20,7 @@ document.getElementById('clienteForm').addEventListener('submit', async (e) => {
   }
 
   if (telefoneLimpo.length < 10) {
-    mensagem.textContent = 'Telefone inválido. Use com DDD (ex: 14999998888).';
+    mensagem.textContent = 'Telefone inválido. Use com DDD (ex: (14) 99999-8888).';
     mensagem.style.color = 'red';
     return;
   }
@@ -47,7 +47,30 @@ document.getElementById('clienteForm').addEventListener('submit', async (e) => {
   }
 });
 
+// ===================== FORMATAÇÃO DINÂMICA DO TELEFONE =====================
+function formatarTelefone(event) {
+  const input = event.target;
+  let valor = input.value.replace(/\D/g, '');
+
+  if (valor.length > 11) valor = valor.slice(0, 11);
+
+  if (valor.length >= 2 && valor.length <= 6) {
+    valor = `(${valor.slice(0, 2)}) ${valor.slice(2)}`;
+  } else if (valor.length > 6 && valor.length <= 10) {
+    valor = `(${valor.slice(0, 2)}) ${valor.slice(2, 6)}-${valor.slice(6)}`;
+  } else if (valor.length === 11) {
+    valor = `(${valor.slice(0, 2)}) ${valor.slice(2, 7)}-${valor.slice(7)}`;
+  }
+
+  input.value = valor;
+}
+
+// Aplica formatação ao input de telefone principal
 document.addEventListener('DOMContentLoaded', () => {
+  const inputTelefone = document.getElementById('telefone');
+  inputTelefone.addEventListener('input', formatarTelefone);
+
+  // Autocomplete por nome
   const inputNome = document.getElementById('nome');
   const sugestoes = document.createElement('div');
   sugestoes.id = 'sugestoes-clientes';
@@ -92,7 +115,104 @@ document.addEventListener('DOMContentLoaded', () => {
       sugestoes.style.display = 'none';
     }
   });
+
+  // Botão Clientes Cadastrados
+  const btnClientes = document.getElementById('btnClientesCadastrados');
+  if (btnClientes) {
+    btnClientes.addEventListener('click', async () => {
+      const container = document.getElementById('clientesContainer');
+      container.style.display = 'block';
+      const tbody = document.querySelector('#tabelaClientes tbody');
+      tbody.innerHTML = '';
+
+      try {
+        const clientes = await window.electronAPI.getClientes();
+        if (clientes.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5">Nenhum cliente cadastrado.</td></tr>';
+          return;
+        }
+
+        clientes.forEach(cliente => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${cliente.id}</td>
+            <td><input type="text" value="${cliente.nome}" /></td>
+            <td><input type="text" value="${formatarTelefoneTexto(cliente.telefone)}" class="telefone-tabela" /></td>
+            <td><input type="text" value="${cliente.observacao || ''}" /></td>
+            <td>
+              <button class="btn-alterar" onclick="atualizarClienteTabela(${cliente.id}, this)"><i class="fas fa-edit"></i></button>
+              <button class="btn-remover" onclick="excluirClienteTabela(${cliente.id}, this)"><i class="fas fa-trash-alt"></i></button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        // Aplica formatação nos inputs da tabela
+        document.querySelectorAll('.telefone-tabela').forEach(input => {
+          input.addEventListener('input', formatarTelefone);
+        });
+
+      } catch (error) {
+        console.error('Erro ao buscar clientes:', error);
+        tbody.innerHTML = '<tr><td colspan="5">Erro ao carregar clientes.</td></tr>';
+      }
+    });
+  }
 });
+
+// Formata telefone recebido do banco para exibição
+function formatarTelefoneTexto(telefone) {
+  const valor = telefone.replace(/\D/g, '');
+  if (valor.length === 11) {
+    return `(${valor.slice(0, 2)}) ${valor.slice(2, 7)}-${valor.slice(7)}`;
+  }
+  if (valor.length === 10) {
+    return `(${valor.slice(0, 2)}) ${valor.slice(2, 6)}-${valor.slice(6)}`;
+  }
+  return telefone;
+}
+
+// Ações da Tabela
+window.atualizarClienteTabela = async (id, btn) => {
+  const row = btn.closest('tr');
+  const nome = row.querySelector('td:nth-child(2) input').value.trim();
+  const telefone = row.querySelector('td:nth-child(3) input').value.trim().replace(/\D/g, '');
+  const observacao = row.querySelector('td:nth-child(4) input').value.trim();
+
+  if (!nome || telefone.length < 10) {
+    alert('Preencha corretamente o nome e o telefone.');
+    return;
+  }
+
+  try {
+    const resultado = await window.electronAPI.atualizarCliente({ id, nome, telefone, observacao });
+    if (resultado.success) {
+      alert('Cliente atualizado com sucesso!');
+    } else {
+      alert(resultado.message || 'Erro ao atualizar cliente.');
+    }
+  } catch (error) {
+    console.error('Erro ao atualizar cliente:', error);
+    alert('Erro interno ao atualizar.');
+  }
+};
+
+window.excluirClienteTabela = async (id, btn) => {
+  if (!confirm('Deseja realmente excluir este cliente?')) return;
+
+  try {
+    const resultado = await window.electronAPI.excluirCliente(id);
+    if (resultado.success) {
+      btn.closest('tr').remove();
+      alert('Cliente excluído com sucesso!');
+    } else {
+      alert(resultado.message || 'Erro ao excluir cliente.');
+    }
+  } catch (error) {
+    console.error('Erro ao excluir cliente:', error);
+    alert('Erro interno ao excluir.');
+  }
+};
 
 // Funções auxiliares
 function irPara(pagina) {
