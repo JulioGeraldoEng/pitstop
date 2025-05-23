@@ -1,29 +1,19 @@
-/* Botões */
-button {
-  padding: 10px 20px;
-  margin: 5px;
-  background-color: #0078d7;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
+/* Campos agrupados em linha (padrão do sistema) */
+.form-linha {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  /* A margem inferior padrão será sobrescrita abaixo para o último elemento */
+  margin-bottom: 20px; /* Mantém para outras form-linhas, mas será ajustado para a última */
 }
 
-button:hover {
-  background-color: #005fa3;
-}
-
-.form-container {
-  max-width: 400px;
-  margin: 0 auto;
-  text-align: center;
-}
-
+/* Campo individual */
 .campo {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  margin-bottom: 15px;
+  flex: 1;
+  min-width: 150px;
 }
 
 .campo label {
@@ -31,35 +21,26 @@ button:hover {
   margin-bottom: 5px;
 }
 
-input {
-  width: 100%;
-  max-width: 300px;
+.campo input {
   padding: 10px;
-  margin-bottom: 10px;
-  border-radius: 4px;
   border: 1px solid #ccc;
+  border-radius: 4px;
   box-sizing: border-box;
 }
 
-.date-range {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.date-range input {
-  width: 120px;
+/* Botão dentro do formulário */
+.campo.botao {
+  flex: 0 0 auto;
 }
 
 .buttons {
   display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin-top: 20px;
+  gap: 10px;
 }
 
+/* Botões padrão */
 button {
-  padding: 10px 20px;
+  padding: 10px 15px;
   background-color: #0078d7;
   color: white;
   border: none;
@@ -75,11 +56,11 @@ button:hover {
 }
 
 button#buscar {
-  background-color: #4CAF50;
+  background-color: #28a745;
 }
 
 button#buscar:hover {
-  background-color: #45a049;
+  background-color: #218838;
 }
 
 button#limpar {
@@ -90,10 +71,51 @@ button#limpar:hover {
   background-color: #d32f2f;
 }
 
+button#novaVenda {
+  background-color: #0078d7;
+}
+
+button#novaVenda:hover {
+  background-color: #005fa3;
+}
+
+   
+/* Formulário */
+.formulario {
+  /* Remove qualquer margem inferior que o próprio formulário possa ter */
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important; /* Remove padding inferior também */
+  border: none; /* Remove bordas do formulário */
+}
+
+/* Garante que a última linha do formulário não tenha margem inferior */
+.formulario .form-linha:last-child {
+  margin-bottom: 0 !important;
+}
+
+
+/* Tabela de venda */
+#tabela-relatorio {
+  /* Ajuste a margem superior para controlar o espaçamento */
+  margin-top: 20px !important; /* Define o espaçamento desejado acima da tabela, com prioridade */
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 1000px;
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Remove a margem superior do título dentro da tabela de relatório */
+#tabela-relatorio h2 {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+
 .tabela-venda {
   width: 100%;
-  max-width: 1000px;
-  margin: 20px auto;
   border-collapse: collapse;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
   background-color: white;
@@ -102,15 +124,14 @@ button#limpar:hover {
 .tabela-venda th,
 .tabela-venda td {
   border: 1px solid #ccc;
-  padding: 2px 4px;
+  padding: 4px 6px;
   text-align: center;
-  font-size: 13px;
-  line-height: 1.0;
+  line-height: 1.2;
 }
 
 .tabela-venda th {
-  background-color: #f0f0f0;
-  font-weight: bold;
+  background-color: #0078d7;
+  color: white;
 }
 
 /* Larguras proporcionais */
@@ -131,12 +152,12 @@ button#limpar:hover {
 
 .tabela-venda th:nth-child(4),
 .tabela-venda td:nth-child(4) {
-  width: 20%; /* Data da Venda */
+  width: 15%; /* Data da Venda */
 }
 
 .tabela-venda th:nth-child(5),
 .tabela-venda td:nth-child(5) {
-  width: 20%; /* Vencimento */
+  width: 15%; /* Vencimento */
 }
 
 .tabela-venda th:nth-child(6),
@@ -144,112 +165,93 @@ button#limpar:hover {
   width: 15%; /* Total */
 }
 
+/* Resumo */
 .resumo-venda {
+  max-width: 400px;
+  margin: 20px auto;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   text-align: center;
-  margin-top: 20px;
 }
 
-#totalRelatorio {
-  font-size: 18px;
-  font-weight: bold;
+.resumo-venda p {
+  margin: 6px 0;
+  font-size: 1.1em;
+  color: #0742c4;
 }
 
-#mensagem {
-  font-size: 16px;
-  margin-top: 10px;
-}
-
+/* Autocomplete */
 .sugestoes-box {
   position: absolute;
   background: white;
   border: 1px solid #ccc;
-  border-top: none;
-  z-index: 1000;
-  width: 100%;
-  max-height: 200px;
+  max-height: 150px;
   overflow-y: auto;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  z-index: 1000;
+  display: none;
 }
+
 
 .sugestoes-box div {
   padding: 8px;
   cursor: pointer;
+  border-bottom: 1px solid #eee;
+}
+
+.sugestoes-box div:last-child {
+  border-bottom: none;
 }
 
 .sugestoes-box div:hover {
   background-color: #f0f0f0;
 }
 
+.mensagem-status {
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+  margin: 0 !important; /* Zera todas as margens */
+  padding: 0 !important; /* Garante que não haja preenchimento */
+  border: none !important; /* Garante que não haja borda */
+  line-height: 0 !important; /* Zera a altura da linha */
+  height: 0 !important; /* Garante que o elemento não tenha altura quando vazio */
+  overflow: hidden !important; /* Oculta qualquer conteúdo que possa vazar */
+}
 
 /* Responsividade */
 @media (max-width: 768px) {
-  .form-group {
-    grid-template-columns: 1fr;
-  }
-  
-  .date-range {
+  .form-linha {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
   }
-  
-  .date-range span {
-    display: none;
+
+  .buttons {
+    flex-direction: column;
+  }
+
+  .campo.botao {
+    margin-top: 10px;
   }
 }
 
-/* Padronizar o estilo da caixa de sugestões */
-.sugestoes {
-  position: absolute;
-  background: white;
-  border: 1px solid #ccc;
-  border-top: none;
-  z-index: 1000;
-  width: 100%;
-  max-height: 200px;
-  overflow-y: auto;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.sugestoes div {
-  padding: 8px;
-  cursor: pointer;
-}
-
-.sugestoes div:hover {
-  background-color: #f0f0f0;
-}
-
-/* Estilo opcional para separar visualmente as seções */
-.resultados-venda {
-  max-width: 1000px;
-  margin: 0 auto 30px;
-}
-
-.container-centralizado {
+/* Resumo */
+.resumo-venda {
   max-width: 400px;
-  margin: 0 auto 30px;
-}
-#tabela-relatorio {
-  margin-top: 30px;
-  max-width: 900px;
-  margin-left: auto;
-  margin-right: auto;
-  background-color: #ffffff;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.tabela-venda th {
-  background-color: #0078d7;
-  color: white;
-}
-
-.tabela-venda th,
-.tabela-venda td {
-  border: 1px solid #ccc;
-  padding: 4px 6px;
+  margin: 20px auto;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   text-align: center;
-  line-height: 1.2;
-  font-size: 14px;
 }
+
+.resumo-venda p {
+  margin: 6px 0;
+  font-size: 1.1em;
+  color: #0742c4;
+}
+

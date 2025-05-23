@@ -319,70 +319,70 @@ ipcMain.handle('registrar-venda', async (event, dadosVenda) => {
 
 ipcMain.handle('buscarVendas', async (event, filtros) => {
   return new Promise((resolve, reject) => {
-      const { cliente, dataInicio, dataFim, vencimentoInicio, vencimentoFim } = filtros;
+    const { cliente, clienteId, dataInicio, dataFim, vencimentoInicio, vencimentoFim } = filtros;
 
-      let query = `
-        SELECT v.id, c.nome as cliente, c.observacao, v.data, v.data_vencimento as vencimento, v.total
-        FROM vendas v
-        JOIN clientes c ON c.id = v.cliente_id
-        WHERE 1 = 1
-      `;
-      const params = [];
+    let query = `
+      SELECT v.id, c.nome as cliente, c.observacao, v.data, v.data_vencimento as vencimento, v.total
+      FROM vendas v
+      JOIN clientes c ON c.id = v.cliente_id
+      WHERE 1 = 1
+    `;
+    const params = [];
 
-      // Filtro cliente (nome)
-      if (cliente) {
-        query += " AND c.nome LIKE ?";
-        params.push(`%${cliente}%`);
+    // Se clienteId for fornecido, busca pelo ID (busca exata)
+    if (clienteId) {
+      query += " AND c.id = ?";
+      params.push(clienteId);
+    } else if (cliente) {
+      query += " AND c.nome LIKE ?";
+      params.push(`%${cliente}%`);
+    }
+
+
+    const formatarData = (data) => {
+      if (!data || !/^\d{2}\/\d{2}\/\d{4}$/.test(data)) return null;
+      const [dia, mes, ano] = data.split('/');
+      return `${ano}-${mes}-${dia}`;
+    };
+
+    if (dataInicio) {
+      query += " AND DATE(v.data) >= DATE(?)";
+      params.push(formatarData(dataInicio));
+    }
+
+    if (dataFim) {
+      query += " AND DATE(v.data) <= DATE(?)";
+      params.push(formatarData(dataFim));
+    }
+
+    if (vencimentoInicio) {
+      query += " AND DATE(v.data_vencimento) >= DATE(?)";
+      params.push(formatarData(vencimentoInicio));
+    }
+
+    if (vencimentoFim) {
+      query += " AND DATE(v.data_vencimento) <= DATE(?)";
+      params.push(formatarData(vencimentoFim));
+    }
+
+    query += " ORDER BY v.data DESC";
+
+    db.all(query, params, (err, rows) => {
+      if (err) {
+        console.error('Erro ao buscar vendas:', err.message);
+        return reject([]);
+      } else {
+        const vendasFormatadas = rows.map(venda => ({
+          ...venda,
+          data: new Date(venda.data).toLocaleDateString('pt-BR'),
+          vencimento: venda.vencimento ? new Date(venda.vencimento).toLocaleDateString('pt-BR') : ''
+        }));
+        resolve(vendasFormatadas);
       }
-
-      const formatarData = (data) => { // Função auxiliar local para esta handler
-        if (!data || !/^\d{2}\/\d{2}\/\d{4}$/.test(data)) return null;
-        const [dia, mes, ano] = data.split('/');
-        return `${ano}-${mes}-${dia}`;
-      };
-
-      if (cliente) {
-        query += " AND c.nome LIKE ?";
-        params.push(`%${cliente}%`);
-      }
-
-      if (dataInicio) {
-        query += " AND DATE(v.data) >= DATE(?)";
-        params.push(formatarData(dataInicio));
-      }
-
-      if (dataFim) {
-        query += " AND DATE(v.data) <= DATE(?)";
-        params.push(formatarData(dataFim));
-      }
-
-      if (vencimentoInicio) {
-        query += " AND DATE(v.data_vencimento) >= DATE(?)";
-        params.push(formatarData(vencimentoInicio));
-      }
-
-      if (vencimentoFim) {
-        query += " AND DATE(v.data_vencimento) <= DATE(?)";
-        params.push(formatarData(vencimentoFim));
-      }
-
-      query += " ORDER BY v.data DESC";
-
-      db.all(query, params, (err, rows) => {
-          if (err) {
-              console.error('Erro ao buscar vendas:', err.message);
-              return reject([]);
-          } else {
-              const vendasFormatadas = rows.map(venda => ({
-                  ...venda,
-                  data: new Date(venda.data).toLocaleDateString('pt-BR'),
-                  vencimento: venda.vencimento ? new Date(venda.vencimento).toLocaleDateString('pt-BR') : ''
-              }));
-              resolve(vendasFormatadas);
-          }
-      });
+    });
   });
 });
+
 
 
 // Quando o aplicativo Electron estiver pronto

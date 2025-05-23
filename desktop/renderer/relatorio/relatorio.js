@@ -3,12 +3,21 @@ if (!localStorage.getItem('usuarioLogado')) {
   window.location.href = '../login/login.html';
 }
 
+let clienteSelecionadoId = null;
+
+
 document.addEventListener('DOMContentLoaded', async () => {
   const btnBuscar = document.getElementById('buscar');
   const btnLimpar = document.getElementById('limpar');
   const tabelaVendas = document.getElementById('tabela-vendas').querySelector('tbody');
   const mensagem = document.getElementById('mensagem');
   const totalRelatorio = document.getElementById('totalRelatorio');
+  const resumoRelatorioDiv = document.getElementById('resumo-relatorio');
+
+  // Inicialmente oculta a mensagem e a tabela de resultados
+  mensagem.style.display = 'none';
+  document.getElementById('tabela-relatorio').style.display = 'none';
+  resumoRelatorioDiv.style.display = 'none';
 
   // Adiciona máscara aos campos de data
   document.querySelectorAll('input[type="text"][placeholder="dd/mm/aaaa"]').forEach(input => {
@@ -55,8 +64,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Validação básica das datas
     const validarData = (data, campo) => {
       if (data && !/^\d{2}\/\d{2}\/\d{4}$/.test(data)) {
-        mensagem.textContent = `Formato de ${campo} inválido (use dd/mm/aaaa)`;
-        mensagem.style.color = 'red';
+        exibirMensagem(`Formato de ${campo} inválido (use dd/mm/aaaa)`, 'red');
         return false;
       }
       return true;
@@ -71,11 +79,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Mostra loading
       btnBuscar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Buscando...';
       btnBuscar.disabled = true;
-      mensagem.textContent = '';
-      mensagem.style.color = '';
+      exibirMensagem(''); // Limpa a mensagem anterior
 
       const filtros = {
-        cliente,
+        cliente: inputCliente.value.trim(),  
+        clienteId: clienteSelecionadoId,
         dataInicio,
         dataFim,
         vencimentoInicio,
@@ -89,6 +97,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const divTabela = document.getElementById('tabela-relatorio');
       divTabela.style.display = 'none';
       tabelaVendas.innerHTML = '';
+      resumoRelatorioDiv.style.display = 'none';
 
       // Preenche a tabela com os resultados
       if (vendas && vendas.length > 0) {
@@ -105,7 +114,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <td>R$ ${venda.total ? venda.total.toFixed(2).replace('.', ',') : '0,00'}</td>
           `;
           tabelaVendas.appendChild(tr);
-          document.getElementById('tabela-relatorio').style.display = 'block';
+          divTabela.style.display = 'block';
           
           if (venda.total) {
             totalGeral += parseFloat(venda.total);
@@ -113,17 +122,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         totalRelatorio.textContent = `Total Geral: R$ ${totalGeral.toFixed(2).replace('.', ',')}`;
-        mensagem.textContent = `${vendas.length} vendas encontradas.`;
-        mensagem.style.color = 'green';
+        resumoRelatorioDiv.style.display = 'block';
+        exibirMensagem(`${vendas.length} vendas encontradas.`, 'green');
       } else {
-        mensagem.textContent = 'Nenhuma venda encontrada com os filtros informados.';
-        mensagem.style.color = 'blue';
+        resumoRelatorioDiv.style.display = 'none';
+        exibirMensagem('Nenhuma venda encontrada com os filtros informados.', 'blue');
         totalRelatorio.textContent = '';
       }
     } catch (error) {
       console.error('Erro ao buscar vendas:', error);
-      mensagem.textContent = 'Erro ao conectar com o banco de dados. Verifique sua conexão.';
-      mensagem.style.color = 'red';
+      resumoRelatorioDiv.style.display = 'none';
+      exibirMensagem('Erro ao conectar com o banco de dados. Verifique sua conexão.', 'red');
       totalRelatorio.textContent = '';
     } finally {
       btnBuscar.innerHTML = '<i class="fas fa-search"></i> Buscar';
@@ -139,9 +148,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('vencimentoInicio').value = '';
     document.getElementById('vencimentoFim').value = '';
     tabelaVendas.innerHTML = '';
-    mensagem.textContent = '';
+    exibirMensagem(''); // Limpa e oculta a mensagem
     totalRelatorio.textContent = '';
     document.getElementById('tabela-relatorio').style.display = 'none';
+    resumoRelatorioDiv.style.display = 'none';
+    clienteSelecionadoId = null; // limpa o ID selecionado
   });
 });
 
@@ -158,6 +169,7 @@ function posicionarSugestoes(input, box) {
 }
 
 inputCliente.addEventListener('input', async () => {
+  clienteSelecionadoId = null; // limpa o ID sempre que o texto for alterado
   const termo = inputCliente.value.trim();
   sugestoes.innerHTML = '';
   sugestoes.style.display = 'none';
@@ -177,6 +189,7 @@ inputCliente.addEventListener('input', async () => {
         div.textContent = `${cliente.nome} (${cliente.observacao || 'Sem observação'})`;
         div.addEventListener('click', () => {
           inputCliente.value = cliente.nome;
+          clienteSelecionadoId = cliente.id;
           sugestoes.innerHTML = '';
           sugestoes.style.display = 'none';
         });
@@ -198,6 +211,21 @@ document.addEventListener('click', (e) => {
   }
 });
 
+// Exibe mensagem colorida e controla a visibilidade
+function exibirMensagem(texto, cor) {
+  const mensagem = document.getElementById('mensagem');
+  if (mensagem) {
+    if (texto) {
+      mensagem.textContent = texto;
+      mensagem.style.color = cor;
+      mensagem.style.display = 'block'; // Mostra a mensagem
+    } else {
+      mensagem.textContent = '';
+      mensagem.style.display = 'none'; // Oculta a mensagem se não houver texto
+    }
+  }
+}
+
 // Navegação
 function irPara(pagina) {
   window.location.href = pagina;
@@ -207,3 +235,4 @@ function logout() {
   localStorage.removeItem('usuarioLogado');
   window.location.href = '../login/login.html';
 }
+
