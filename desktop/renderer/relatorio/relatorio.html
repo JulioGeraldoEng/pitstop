@@ -56,6 +56,7 @@
           <div class="buttons">
             <button id="buscar"><i class="fas fa-search"></i> Buscar</button>
             <button id="limpar"><i class="fas fa-broom"></i> Limpar</button>
+            <button type="button" id="exportarPdf"><i class="fas fa-file-pdf"></i> Exportar para PDF</button>
             <button type="button" id="novaVenda" onclick="irPara('../venda/venda.html')" style="white-space: nowrap;">
               <i class="fas fa-cash-register"></i> <span>Nova Venda</span>
             </button>
@@ -80,13 +81,33 @@
           </tr>
         </thead>
         <tbody>
-          </tbody>
+        
+        </tbody>
       </table>
     </div>
 
     <div id="resumo-relatorio" class="resumo-venda" style="display: none;">
       <p id="totalRelatorio"></p>
-      </div>
+    </div>
+
+    <div id="pdf-content" style="display: none;">
+      <h1 style="text-align: center; margin-bottom: 20px;">PitStop - Relatório de Vendas</h1>
+      <div id="pdf-filtros" style="margin-bottom: 20px;"></div>
+      <table cellspacing="0" cellpadding="5" style="width: 100%; border-collapse: collapse;" id="pdf-tabela">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Cliente</th>
+            <th>Observação</th>
+            <th>Data</th>
+            <th>Vencimento</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div style="margin-top: 20px; font-weight: bold;" id="pdf-total"></div>
+    </div>
 
     <script src="relatorio.js"></script>
   </body>

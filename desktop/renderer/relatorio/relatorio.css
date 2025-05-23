@@ -79,7 +79,15 @@ button#novaVenda:hover {
   background-color: #005fa3;
 }
 
-   
+button#exportarPdf {
+  background-color: #ebac01;
+}
+
+button#exportarPdf:hover {
+  background-color: #d89c00;
+}
+
+
 /* Formulário */
 .formulario {
   /* Remove qualquer margem inferior que o próprio formulário possa ter */
@@ -165,24 +173,6 @@ button#novaVenda:hover {
   width: 15%; /* Total */
 }
 
-/* Resumo */
-.resumo-venda {
-  max-width: 400px;
-  margin: 20px auto;
-  padding: 15px;
-  background-color: #f9f9f9;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  text-align: center;
-}
-
-.resumo-venda p {
-  margin: 6px 0;
-  font-size: 1.1em;
-  color: #0742c4;
-}
-
 /* Autocomplete */
 .sugestoes-box {
   position: absolute;
@@ -255,3 +245,17 @@ button#novaVenda:hover {
   color: #0742c4;
 }
 
+#resumo-relatorio {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 5px;
+  margin-top: 20px;
+  border: 1px solid #dee2e6;
+}
+
+#totalRelatorio {
+  font-weight: bold;
+  font-size: 1.1em;
+  margin: 0;
+  color: #28a745;
+}

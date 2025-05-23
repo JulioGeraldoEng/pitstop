@@ -1,6 +1,7 @@
 // preload.js
 const { contextBridge, ipcRenderer } = require('electron');
 
+
 contextBridge.exposeInMainWorld('electronAPI', {
   sendLogin: (credentials) => ipcRenderer.invoke('login-attempt', credentials),
   
@@ -21,6 +22,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Vendas
   registrarVenda: (dados) => ipcRenderer.invoke('registrar-venda', dados),
   buscarVendas: (filtros) => ipcRenderer.invoke('buscarVendas', filtros),
+  exportarParaPDF: (htmlContent) => ipcRenderer.invoke('exportar-para-pdf', htmlContent),
+
 
   // Adicione outras APIs aqui se houver
   // Ex: apagarProduto: (id) => ipcRenderer.invoke('apagar-produto', id),

@@ -82,6 +82,7 @@ function createWindow() {
   });
 }
 
+
 // ===========================================================================
 // IPC Main Handlers - REGISTRAR APENAS UMA VEZ AO INICIAR O APP
 // ===========================================================================
@@ -383,7 +384,51 @@ ipcMain.handle('buscarVendas', async (event, filtros) => {
   });
 });
 
+async function salvarPDF(caminhoArquivo, dadosPDF) {
+  try {
+    const diretorio = path.dirname(caminhoArquivo);
 
+    // Cria diretório recursivamente caso não exista
+    if (!fs.existsSync(diretorio)) {
+      fs.mkdirSync(diretorio, { recursive: true });
+    }
+
+    // Grava o arquivo PDF (dadosPDF é um buffer ou string)
+    fs.writeFileSync(caminhoArquivo, dadosPDF);
+
+    console.log(`PDF salvo em: ${caminhoArquivo}`);
+    return caminhoArquivo;
+  } catch (error) {
+    console.error('Erro ao exportar PDF:', error);
+    throw error;
+  }
+}
+
+ipcMain.handle('exportar-para-pdf', async (event) => {
+  const win = event.sender.getOwnerBrowserWindow();
+
+  try {
+    const pdfData = await win.webContents.printToPDF({});
+
+    // Defina um caminho válido para salvar
+    const caminhoSalvar = '/mnt/c/Users/julio/OneDrive/Área de Trabalho/relatorio-vendas.pdf';
+
+    // Certifique-se que o diretório existe (como já falamos antes)
+    const fs = require('fs');
+    const path = require('path');
+    const dir = path.dirname(caminhoSalvar);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
+    fs.writeFileSync(caminhoSalvar, pdfData);
+
+    return caminhoSalvar; // Retorna o caminho para o frontend
+  } catch (error) {
+    console.error('Erro ao exportar PDF:', error);
+    throw error;
+  }
+});
 
 // Quando o aplicativo Electron estiver pronto
 app.whenReady().then(() => {

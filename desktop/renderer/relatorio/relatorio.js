@@ -4,7 +4,29 @@ if (!localStorage.getItem('usuarioLogado')) {
 }
 
 let clienteSelecionadoId = null;
+let dadosUltimoRelatorio = [];
 
+// Funções auxiliares que estavam faltando
+function converterParaNumero(valor) {
+  if (!valor) return 0;
+  
+  if (typeof valor === 'number') {
+    return valor;
+  }
+  
+  // Remove pontos de milhar e substitui vírgula decimal por ponto
+  const valorLimpo = valor.toString()
+    .replace(/\./g, '')
+    .replace(',', '.');
+  
+  const numero = parseFloat(valorLimpo);
+  return isNaN(numero) ? 0 : numero;
+}
+
+function formatarMoeda(valor) {
+  const numero = converterParaNumero(valor);
+  return numero.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
   const btnBuscar = document.getElementById('buscar');
@@ -13,6 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const mensagem = document.getElementById('mensagem');
   const totalRelatorio = document.getElementById('totalRelatorio');
   const resumoRelatorioDiv = document.getElementById('resumo-relatorio');
+  const inputCliente = document.getElementById('cliente');
 
   // Inicialmente oculta a mensagem e a tabela de resultados
   mensagem.style.display = 'none';
@@ -55,13 +78,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Buscar vendas
   btnBuscar.addEventListener('click', async () => {
-    const cliente = document.getElementById('cliente').value.trim();
     const dataInicio = document.getElementById('dataInicio').value;
     const dataFim = document.getElementById('dataFim').value;
     const vencimentoInicio = document.getElementById('vencimentoInicio').value;
     const vencimentoFim = document.getElementById('vencimentoFim').value;
 
-    // Validação básica das datas
     const validarData = (data, campo) => {
       if (data && !/^\d{2}\/\d{2}\/\d{4}$/.test(data)) {
         exibirMensagem(`Formato de ${campo} inválido (use dd/mm/aaaa)`, 'red');
@@ -76,13 +97,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!validarData(vencimentoFim, 'vencimento final')) return;
 
     try {
-      // Mostra loading
       btnBuscar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Buscando...';
       btnBuscar.disabled = true;
-      exibirMensagem(''); // Limpa a mensagem anterior
+      exibirMensagem('');
 
       const filtros = {
-        cliente: inputCliente.value.trim(),  
+        cliente: inputCliente.value.trim(),
         clienteId: clienteSelecionadoId,
         dataInicio,
         dataFim,
@@ -90,20 +110,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         vencimentoFim
       };
 
-      // Chama a API para buscar as vendas
       const vendas = await window.electronAPI.buscarVendas(filtros);
 
-      // Limpa a tabela
       const divTabela = document.getElementById('tabela-relatorio');
       divTabela.style.display = 'none';
       tabelaVendas.innerHTML = '';
       resumoRelatorioDiv.style.display = 'none';
 
-      // Preenche a tabela com os resultados
       if (vendas && vendas.length > 0) {
         let totalGeral = 0;
-        
+
         vendas.forEach(venda => {
+          const valorNumerico = converterParaNumero(venda.total);
+          totalGeral += valorNumerico;
+
           const tr = document.createElement('tr');
           tr.innerHTML = `
             <td>${venda.id || '-'}</td>
@@ -111,29 +131,33 @@ document.addEventListener('DOMContentLoaded', async () => {
             <td>${venda.observacao || '-'}</td>
             <td>${formatarData(venda.data)}</td>
             <td>${formatarData(venda.vencimento)}</td>
-            <td>R$ ${venda.total ? venda.total.toFixed(2).replace('.', ',') : '0,00'}</td>
+            <td>R$ ${formatarMoeda(valorNumerico)}</td>
           `;
           tabelaVendas.appendChild(tr);
-          divTabela.style.display = 'block';
-          
-          if (venda.total) {
-            totalGeral += parseFloat(venda.total);
-          }
         });
 
-        totalRelatorio.textContent = `Total Geral: R$ ${totalGeral.toFixed(2).replace('.', ',')}`;
+        // Exibir os elementos
+        divTabela.style.display = 'block';
         resumoRelatorioDiv.style.display = 'block';
+        totalRelatorio.textContent = `Total Geral: R$ ${formatarMoeda(totalGeral)}`;
         exibirMensagem(`${vendas.length} vendas encontradas.`, 'green');
+
+        // Preencher dados para PDF
+        dadosUltimoRelatorio = vendas;
+        preencherPDF(vendas, {
+          clienteNome: inputCliente.value.trim(),
+          dataInicio,
+          dataFim,
+          vencimentoInicio,
+          vencimentoFim
+        });
+
       } else {
-        resumoRelatorioDiv.style.display = 'none';
         exibirMensagem('Nenhuma venda encontrada com os filtros informados.', 'blue');
-        totalRelatorio.textContent = '';
       }
     } catch (error) {
       console.error('Erro ao buscar vendas:', error);
-      resumoRelatorioDiv.style.display = 'none';
       exibirMensagem('Erro ao conectar com o banco de dados. Verifique sua conexão.', 'red');
-      totalRelatorio.textContent = '';
     } finally {
       btnBuscar.innerHTML = '<i class="fas fa-search"></i> Buscar';
       btnBuscar.disabled = false;
@@ -148,18 +172,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('vencimentoInicio').value = '';
     document.getElementById('vencimentoFim').value = '';
     tabelaVendas.innerHTML = '';
-    exibirMensagem(''); // Limpa e oculta a mensagem
+    exibirMensagem('');
     totalRelatorio.textContent = '';
     document.getElementById('tabela-relatorio').style.display = 'none';
     resumoRelatorioDiv.style.display = 'none';
-    clienteSelecionadoId = null; // limpa o ID selecionado
+    clienteSelecionadoId = null;
   });
 });
 
+// Autocomplete de clientes
 const inputCliente = document.getElementById('cliente');
 const sugestoes = document.getElementById('sugestoesCliente');
 
-// Posiciona a caixa de sugestões
 function posicionarSugestoes(input, box) {
   const rect = input.getBoundingClientRect();
   box.style.left = `${rect.left + window.scrollX}px`;
@@ -169,7 +193,7 @@ function posicionarSugestoes(input, box) {
 }
 
 inputCliente.addEventListener('input', async () => {
-  clienteSelecionadoId = null; // limpa o ID sempre que o texto for alterado
+  clienteSelecionadoId = null;
   const termo = inputCliente.value.trim();
   sugestoes.innerHTML = '';
   sugestoes.style.display = 'none';
@@ -203,7 +227,7 @@ inputCliente.addEventListener('input', async () => {
   }
 });
 
-// Oculta ao clicar fora
+// Oculta sugestões ao clicar fora
 document.addEventListener('click', (e) => {
   if (!sugestoes.contains(e.target) && e.target !== inputCliente) {
     sugestoes.innerHTML = '';
@@ -211,19 +235,87 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Exibe mensagem colorida e controla a visibilidade
+// Exibe mensagem colorida
 function exibirMensagem(texto, cor) {
   const mensagem = document.getElementById('mensagem');
   if (mensagem) {
     if (texto) {
       mensagem.textContent = texto;
       mensagem.style.color = cor;
-      mensagem.style.display = 'block'; // Mostra a mensagem
+      mensagem.style.display = 'block';
     } else {
       mensagem.textContent = '';
-      mensagem.style.display = 'none'; // Oculta a mensagem se não houver texto
+      mensagem.style.display = 'none';
     }
   }
+}
+
+// Exportar para PDF
+document.getElementById('exportarPdf').addEventListener('click', async (e) => {
+  e.preventDefault();
+
+  if (dadosUltimoRelatorio.length === 0) {
+    exibirMensagem('Nenhum dado disponível para exportar. Realize uma busca primeiro.', 'red');
+    return;
+  }
+
+  const pdfContent = document.getElementById('pdf-content');
+
+  try {
+    const caminho = await window.electronAPI.exportarParaPDF(pdfContent.innerHTML);
+    exibirMensagem(`PDF salvo com sucesso em: ${caminho}`, 'green');
+    alert(`PDF salvo com sucesso em: ${caminho}`);
+  } catch (error) {
+    console.error('Erro ao salvar PDF:', error);
+    alert('Erro ao salvar PDF: ' + error.message);
+    exibirMensagem('Erro ao salvar PDF. Verifique o console para detalhes.', 'red');
+  } finally {
+    pdfContent.style.display = 'none'; // Reoculta o conteúdo após exportar
+  }
+});
+
+
+// Preencher dados para PDF
+function preencherPDF(vendas, filtros) {
+  const divFiltros = document.getElementById('pdf-filtros');
+  const tbodyPDF = document.querySelector('#pdf-tabela tbody');
+  const totalPDF = document.getElementById('pdf-total');
+
+  tbodyPDF.innerHTML = '';
+  divFiltros.innerHTML = '';
+  totalPDF.textContent = '';
+
+  // Montar descrição dos filtros aplicados
+  let filtrosTexto = 'Filtros aplicados: ';
+  const filtrosArray = [];
+  
+  if (filtros.clienteNome) filtrosArray.push(`Cliente: ${filtros.clienteNome}`);
+  if (filtros.dataInicio) filtrosArray.push(`Data Inicial: ${filtros.dataInicio}`);
+  if (filtros.dataFim) filtrosArray.push(`Data Final: ${filtros.dataFim}`);
+  if (filtros.vencimentoInicio) filtrosArray.push(`Vencimento Inicial: ${filtros.vencimentoInicio}`);
+  if (filtros.vencimentoFim) filtrosArray.push(`Vencimento Final: ${filtros.vencimentoFim}`);
+  
+  divFiltros.textContent = filtrosTexto + filtrosArray.join('; ');
+
+  let totalGeral = 0;
+
+  vendas.forEach(venda => {
+    const valorNumerico = converterParaNumero(venda.total);
+    totalGeral += valorNumerico;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${venda.id || '-'}</td>
+      <td>${venda.cliente || '-'}</td>
+      <td>${venda.observacao || '-'}</td>
+      <td>${formatarData(venda.data)}</td>
+      <td>${formatarData(venda.vencimento)}</td>
+      <td>R$ ${formatarMoeda(valorNumerico)}</td>
+    `;
+    tbodyPDF.appendChild(tr);
+  });
+
+  totalPDF.textContent = `Total Geral: R$ ${formatarMoeda(totalGeral)}`;
 }
 
 // Navegação
@@ -235,4 +327,3 @@ function logout() {
   localStorage.removeItem('usuarioLogado');
   window.location.href = '../login/login.html';
 }
-
