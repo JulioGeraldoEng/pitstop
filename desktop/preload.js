@@ -22,7 +22,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Vendas
   registrarVenda: (dados) => ipcRenderer.invoke('registrar-venda', dados),
   buscarVendas: (filtros) => ipcRenderer.invoke('buscarVendas', filtros),
-  exportarParaPDF: (htmlContent) => ipcRenderer.invoke('exportar-para-pdf', htmlContent),
+  exportarParaPDF: (htmlContent) => ipcRenderer.invoke('exportarParaPDF', htmlContent),
 
 
   // Adicione outras APIs aqui se houver

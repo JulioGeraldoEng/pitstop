@@ -57,6 +57,9 @@
             <button id="buscar"><i class="fas fa-search"></i> Buscar</button>
             <button id="limpar"><i class="fas fa-broom"></i> Limpar</button>
             <button type="button" id="exportarPdf"><i class="fas fa-file-pdf"></i> Exportar para PDF</button>
+            <button type="button" id="recebimento" onclick="irPara('../recebimento/recebimento.html')">
+              <i class="fas fa-money-bill-wave"></i> Recebimento
+            </button>
             <button type="button" id="novaVenda" onclick="irPara('../venda/venda.html')" style="white-space: nowrap;">
               <i class="fas fa-cash-register"></i> <span>Nova Venda</span>
             </button>
@@ -72,7 +75,7 @@
       <table id="tabela-vendas" class="tabela-venda">
         <thead>
           <tr>
-            <th>ID</th>
+            <th>Venda</th>
             <th>Cliente</th>
             <th>Observação</th>
             <th>Data da Venda</th>

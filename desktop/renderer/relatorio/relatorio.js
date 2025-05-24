@@ -166,20 +166,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Limpar filtros
   btnLimpar.addEventListener('click', () => {
-    document.getElementById('cliente').value = '';
-    document.getElementById('dataInicio').value = '';
-    document.getElementById('dataFim').value = '';
-    document.getElementById('vencimentoInicio').value = '';
-    document.getElementById('vencimentoFim').value = '';
-    tabelaVendas.innerHTML = '';
-    exibirMensagem('');
-    totalRelatorio.textContent = '';
-    document.getElementById('tabela-relatorio').style.display = 'none';
-    resumoRelatorioDiv.style.display = 'none';
-    clienteSelecionadoId = null;
+    limparRelatorio();
   });
 });
 
+function limparRelatorio() {
+  document.getElementById('cliente').value = '';
+  document.getElementById('dataInicio').value = '';
+  document.getElementById('dataFim').value = '';
+  document.getElementById('vencimentoInicio').value = '';
+  document.getElementById('vencimentoFim').value = '';
+  tabelaVendas.innerHTML = '';
+  exibirMensagem('');
+  totalRelatorio.textContent = '';
+  document.getElementById('tabela-relatorio').style.display = 'none';
+  resumoRelatorioDiv.style.display = 'none';
+  clienteSelecionadoId = null;
+}
 // Autocomplete de clientes
 const inputCliente = document.getElementById('cliente');
 const sugestoes = document.getElementById('sugestoesCliente');
@@ -259,18 +262,58 @@ document.getElementById('exportarPdf').addEventListener('click', async (e) => {
     return;
   }
 
-  const pdfContent = document.getElementById('pdf-content');
-
   try {
-    const caminho = await window.electronAPI.exportarParaPDF(pdfContent.innerHTML);
+    // 1. Criar um clone dos elementos que queremos no PDF
+    const divRelatorio = document.getElementById('tabela-relatorio').cloneNode(true);
+    const titulo = divRelatorio.querySelector('h2');
+    const tabela = divRelatorio.querySelector('table');
+    const resumo = document.getElementById('resumo-relatorio').cloneNode(true);
+
+    // 2. Ajustar estilos diretamente no clone
+    divRelatorio.style.margin = '0';
+    divRelatorio.style.padding = '0';
+    divRelatorio.style.boxShadow = 'none';
+    
+    if (titulo) {
+      titulo.style.margin = '0 0 5px 0';
+      titulo.style.padding = '0';
+    }
+
+    tabela.style.marginTop = '0';
+    tabela.style.width = '100%';
+
+    // 3. Criar um container limpo para o PDF
+    const htmlParaPDF = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+            h2 { color: #0078d7; margin: 0 0 5px 0; padding: 0; }
+            table { width: 100%; border-collapse: collapse; margin-top: 0; }
+            th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+            th { background-color: #0078d7; color: white; }
+            .resumo { margin-top: 15px; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          ${titulo?.outerHTML || '<h2>Relatório de Vendas</h2>'}
+          ${tabela.outerHTML}
+          ${resumo.outerHTML}
+        </body>
+      </html>
+    `;
+
+    // 4. Enviar apenas o conteúdo limpo para o Electron
+    const caminho = await window.electronAPI.exportarParaPDF(htmlParaPDF);
+
     exibirMensagem(`PDF salvo com sucesso em: ${caminho}`, 'green');
     alert(`PDF salvo com sucesso em: ${caminho}`);
   } catch (error) {
     console.error('Erro ao salvar PDF:', error);
     alert('Erro ao salvar PDF: ' + error.message);
     exibirMensagem('Erro ao salvar PDF. Verifique o console para detalhes.', 'red');
-  } finally {
-    pdfContent.style.display = 'none'; // Reoculta o conteúdo após exportar
   }
 });
 

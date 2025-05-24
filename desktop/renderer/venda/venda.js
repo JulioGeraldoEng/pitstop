@@ -38,25 +38,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       const clientes = await window.electronAPI.buscarClientesPorNome(termo);
-      if (clientes.length === 0) return;
 
-      clientes.forEach(cliente => {
+      limparSugestoes(sugestoesClienteDiv); // Limpa sugestões antes de inserir novas
+
+      if (clientes.length === 0) {
         const div = document.createElement('div');
-        div.textContent = `${cliente.nome} (${cliente.observacao || 'Sem observação'})`;
-        div.classList.add('sugestao');
-        div.onclick = () => {
-          inputCliente.value = cliente.nome;
-          clienteSelecionadoId = cliente.id;
-          clienteNomeSelecionado = cliente.nome; // Armazena o nome do cliente
-          limparSugestoes(sugestoesClienteDiv);
-        };
+        div.textContent = 'Nenhum cliente encontrado';
+        div.classList.add('sem-sugestao'); // opcional: estilo específico para essa mensagem
         sugestoesClienteDiv.appendChild(div);
-      });
+      } else {
+        clientes.forEach(cliente => {
+          const div = document.createElement('div');
+          div.textContent = `${cliente.nome} (${cliente.observacao || 'Sem observação'})`;
+          div.classList.add('sugestao');
+          div.onclick = () => {
+            inputCliente.value = cliente.nome;
+            clienteSelecionadoId = cliente.id;
+            clienteNomeSelecionado = cliente.nome; // Armazena o nome do cliente
+            limparSugestoes(sugestoesClienteDiv);
+            sugestoesClienteDiv.style.display = 'none';
+          };
+          sugestoesClienteDiv.appendChild(div);
+        });
+      }
+
       posicionarSugestoes(inputCliente, sugestoesClienteDiv);
+      sugestoesClienteDiv.style.display = 'block'; // Exibe o container de sugestões
+
     } catch (error) {
       console.error('Erro ao buscar clientes:', error);
       exibirMensagem('Erro ao buscar clientes.', 'red');
     }
+
   });
 
   // Autocompletar produtos

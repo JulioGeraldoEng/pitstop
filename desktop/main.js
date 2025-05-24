@@ -3,9 +3,18 @@ const path = require('path');
 const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
 
-const dbPath = path.join(__dirname, 'db', 'pitstop.db');
+// Caminho absoluto para a pasta 'db' e o arquivo do banco
+const pastaDB = path.join(__dirname, 'db');
+const dbPath = path.join(pastaDB, 'pitstop.db');
+
+// Garante que a pasta 'db' exista antes de tentar acessar o arquivo do banco
+if (!fs.existsSync(pastaDB)) {
+  fs.mkdirSync(pastaDB, { recursive: true });
+}
+
 const dbExiste = fs.existsSync(dbPath);
 const db = new sqlite3.Database(dbPath);
+
 
 // Variável para armazenar a janela principal
 let mainWindow;
@@ -45,6 +54,7 @@ function initializeDatabase() {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         venda_id INTEGER,
         produto_id INTEGER,
+        nome_produto TEXT NOT NULL,
         quantidade INTEGER NOT NULL,
         preco_unitario REAL NOT NULL,
         FOREIGN KEY (venda_id) REFERENCES vendas(id) ON DELETE CASCADE,
@@ -62,7 +72,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 800,
     height: 640,
-    icon: path.join(__dirname, 'renderer', 'assets', 'icon', 'pitstop_icon.png'),
+    icon: path.join(__dirname, 'renderer', 'assets', 'icon', 'pitstop_icon.ico'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -404,30 +414,33 @@ async function salvarPDF(caminhoArquivo, dadosPDF) {
   }
 }
 
-ipcMain.handle('exportar-para-pdf', async (event) => {
-  const win = event.sender.getOwnerBrowserWindow();
+ipcMain.handle('exportarParaPDF', async (event, htmlContent) => {
+  const { dialog } = require('electron');
+  const fs = require('fs');
+  const path = require('path');
+  
+  const { filePath } = await dialog.showSaveDialog({
+    title: 'Salvar Relatório',
+    defaultPath: path.join(app.getPath('desktop'), 'relatorio-vendas.pdf'),
+    filters: [{ name: 'PDF', extensions: ['pdf'] }]
+  });
 
-  try {
-    const pdfData = await win.webContents.printToPDF({});
+  if (!filePath) return null;
 
-    // Defina um caminho válido para salvar
-    const caminhoSalvar = '/mnt/c/Users/julio/OneDrive/Área de Trabalho/relatorio-vendas.pdf';
+  // Usando webContents.printToPDF
+  const win = new BrowserWindow({ show: false });
+  await win.loadURL(`data:text/html,${encodeURIComponent(htmlContent)}`);
+  
+  const pdfData = await win.webContents.printToPDF({
+    printBackground: true,
+    pageSize: 'A4',
+    marginsType: 1 // Margens mínimas
+  });
 
-    // Certifique-se que o diretório existe (como já falamos antes)
-    const fs = require('fs');
-    const path = require('path');
-    const dir = path.dirname(caminhoSalvar);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-
-    fs.writeFileSync(caminhoSalvar, pdfData);
-
-    return caminhoSalvar; // Retorna o caminho para o frontend
-  } catch (error) {
-    console.error('Erro ao exportar PDF:', error);
-    throw error;
-  }
+  fs.writeFileSync(filePath, pdfData);
+  win.close();
+  
+  return filePath;
 });
 
 // Quando o aplicativo Electron estiver pronto

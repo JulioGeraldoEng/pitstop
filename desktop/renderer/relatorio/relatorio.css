@@ -87,6 +87,14 @@ button#exportarPdf:hover {
   background-color: #d89c00;
 }
 
+button#recebimento {
+  background-color: #01eb91;
+}
+
+button#recebimento:hover {
+  background-color: #00b89c;
+}
+
 
 /* Formulário */
 .formulario {

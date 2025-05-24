@@ -5,6 +5,9 @@
 # Banco de dados SQLite
 **/*.db
 
+# Build artifacts (para electron-builder)
+dist/
+
 # Pastas do Expo
 *.expo
 .expo/
