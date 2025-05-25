@@ -151,6 +151,9 @@ function validarFiltrosData({ dataInicio, dataFim, vencimentoInicio, vencimentoF
 // ===================== [ PROCESSAMENTO DOS RESULTADOS ] =====================
 function processarResultados(vendas, filtros) {
   const divTabela = document.getElementById('tabela-relatorio');
+  const tabelaVendas = document.getElementById('tabela-vendas').querySelector('tbody');
+  const resumoRelatorioDiv = document.getElementById('resumo-relatorio');
+  const totalRelatorio = document.getElementById('totalRelatorio');
   tabelaVendas.innerHTML = '';
   resumoRelatorioDiv.style.display = 'none';
 
@@ -158,19 +161,44 @@ function processarResultados(vendas, filtros) {
     let totalGeral = 0;
 
     vendas.forEach(venda => {
-      const valor = converterParaNumero(venda.total);
+      const valor = converterParaNumero(venda.total_venda);
       totalGeral += valor;
 
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${venda.id || '-'}</td>
+      const trVenda = document.createElement('tr');
+      trVenda.classList.add('venda-principal');
+      trVenda.innerHTML = `
+        <td>${venda.venda_id || '-'}</td>
         <td>${venda.cliente || '-'}</td>
         <td>${venda.observacao || '-'}</td>
         <td>${formatarData(venda.data)}</td>
         <td>${formatarData(venda.vencimento)}</td>
         <td>R$ ${formatarMoeda(valor)}</td>
-      `;
-      tabelaVendas.appendChild(tr);
+        <td></td> <td></td> <td></td> `;
+      tabelaVendas.appendChild(trVenda);
+
+      if (venda.itens && venda.itens.length > 0) {
+        venda.itens.forEach(item => {
+          const trItem = document.createElement('tr');
+          trItem.classList.add('item-venda');
+          trItem.innerHTML = `
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>${item.nome_produto || '-'}</td>
+            <td>${item.quantidade || '-'}</td>
+            <td>R$ ${formatarMoeda(item.preco_unitario)}</td>
+          `;
+          tabelaVendas.appendChild(trItem);
+        });
+      } else {
+        const trItem = document.createElement('tr');
+        trItem.classList.add('item-venda', 'sem-itens');
+        trItem.innerHTML = `<td colspan="9">Nenhum item vendido nesta venda.</td>`;
+        tabelaVendas.appendChild(trItem);
+      }
     });
 
     divTabela.style.display = 'block';

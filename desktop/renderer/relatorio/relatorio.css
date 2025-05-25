@@ -116,7 +116,7 @@ button#recebimento:hover {
   margin-top: 20px !important; /* Define o espaçamento desejado acima da tabela, com prioridade */
   margin-left: auto;
   margin-right: auto;
-  max-width: 1000px;
+  max-width: 1200px; /* Aumentei a largura máxima para acomodar mais colunas */
   background-color: #ffffff;
   padding: 20px;
   border-radius: 10px;
@@ -158,27 +158,42 @@ button#recebimento:hover {
 
 .tabela-venda th:nth-child(2),
 .tabela-venda td:nth-child(2) {
-  width: 20%; /* Cliente */
+  width: 10%; /* Cliente */
 }
 
 .tabela-venda th:nth-child(3),
 .tabela-venda td:nth-child(3) {
-  width: 20%; /* Observação */
+  width: 10%; /* Observação */
 }
 
 .tabela-venda th:nth-child(4),
 .tabela-venda td:nth-child(4) {
-  width: 15%; /* Data da Venda */
+  width: 10%; /* Data da Venda */
 }
 
 .tabela-venda th:nth-child(5),
 .tabela-venda td:nth-child(5) {
-  width: 15%; /* Vencimento */
+  width: 10%; /* Vencimento */
 }
 
 .tabela-venda th:nth-child(6),
 .tabela-venda td:nth-child(6) {
-  width: 15%; /* Total */
+  width: 10%; /* Total */
+}
+
+.tabela-venda th:nth-child(7),
+.tabela-venda td:nth-child(7) {
+  width: 10%; /* Produto */
+}
+
+.tabela-venda th:nth-child(8),
+.tabela-venda td:nth-child(8) {
+  width: 5%; /* Quantidade */
+}
+
+.tabela-venda th:nth-child(9),
+.tabela-venda td:nth-child(9) {
+  width: 10%; /* Preço Unitário */
 }
 
 /* Autocomplete */
@@ -233,6 +248,10 @@ button#recebimento:hover {
   .campo.botao {
     margin-top: 10px;
   }
+
+  #tabela-relatorio {
+    overflow-x: auto; /* Adiciona barra de rolagem horizontal em telas menores */
+  }
 }
 
 /* Resumo */
@@ -266,4 +285,28 @@ button#recebimento:hover {
   font-size: 1.1em;
   margin: 0;
   color: #28a745;
+}
+
+/* Estilo para as linhas de item de venda */
+.item-venda td {
+  background-color: #f8f9fa; /* Cor de fundo levemente diferente para destacar os itens */
+  text-align: left; /* Alinha o texto dos itens à esquerda */
+  padding-left: 30px; /* Adiciona um pequeno recuo para indicar que são itens da venda */
+}
+
+.item-venda.sem-itens td {
+  font-style: italic;
+  color: #777;
+  text-align: center;
+  padding-left: 0;
+}
+
+/* Ajuste de bordas para as linhas de item */
+.item-venda td:first-child,
+.item-venda td:nth-child(2),
+.item-venda td:nth-child(3),
+.item-venda td:nth-child(4),
+.item-venda td:nth-child(5),
+.item-venda td:nth-child(6) {
+  border-left: none; /* Remove a borda esquerda das células de item para alinhar */
 }

@@ -1,15 +1,245 @@
-/* Botões */
+/* Campos agrupados em linha (padrão do sistema) */
+.form-linha {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    /* A margem inferior padrão será sobrescrita abaixo para o último elemento */
+    margin-bottom: 20px; /* Mantém para outras form-linhas, mas será ajustado para a última */
+}
+
+/* Campo individual */
+.campo {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 150px;
+}
+
+.campo label {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.campo input,
+.campo select {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+/* Botão dentro do formulário */
+.campo.botao {
+    flex: 0 0 auto;
+}
+
+.buttons {
+    display: flex;
+    gap: 10px;
+}
+
+/* Botões padrão */
 button {
-  padding: 10px 20px;
-  margin: 5px;
-  background-color: #0078d7;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
+    padding: 10px 15px;
+    background-color: #0078d7;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 button:hover {
-  background-color: #005fa3;
+    background-color: #005fa3;
 }
 
+button#buscarRecebimentos {
+    background-color: #28a745;
+}
+
+button#buscarRecebimentos:hover {
+    background-color: #218838;
+}
+
+button#limparBuscaRecebimentos {
+    background-color: #f44336;
+}
+
+button#limparBuscaRecebimentos:hover {
+    background-color: #d32f2f;
+}
+
+button#novaVenda {
+    background-color: #0078d7;
+}
+
+button#novaVenda:hover {
+    background-color: #005fa3;
+}
+
+/* Formulário */
+.formulario {
+    /* Remove qualquer margem inferior que o próprio formulário possa ter */
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important; /* Remove padding inferior também */
+    border: none; /* Remove bordas do formulário */
+}
+
+/* Garante que a última linha do formulário não tenha margem inferior */
+.formulario .form-linha:last-child {
+    margin-bottom: 0 !important;
+}
+
+
+/* Tabela de recebimentos */
+#tabela-recebimentos {
+    /* Ajuste a margem superior para controlar o espaçamento */
+    margin-top: 20px !important; /* Define o espaçamento desejado acima da tabela, com prioridade */
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 1200px; /* Aumentei a largura máxima para acomodar mais colunas */
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Remove a margem superior do título dentro da tabela de relatório */
+#tabela-recebimentos h2 {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+
+#tabela-contas-receber {
+    width: 100%;
+    border-collapse: collapse;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    background-color: white;
+}
+
+#tabela-contas-receber th,
+#tabela-contas-receber td {
+    border: 1px solid #ccc;
+    padding: 4px 6px;
+    text-align: center;
+    line-height: 1.2;
+}
+
+#tabela-contas-receber th {
+    background-color: #0078d7;
+    color: white;
+}
+
+/* Larguras proporcionais para tabela de recebimentos */
+#tabela-contas-receber th:nth-child(1),
+#tabela-contas-receber td:nth-child(1) {
+    width: 5%; /* ID Recebimento */
+}
+
+#tabela-contas-receber th:nth-child(2),
+#tabela-contas-receber td:nth-child(2) {
+    width: 7%; /* ID Venda */
+}
+
+#tabela-contas-receber th:nth-child(3),
+#tabela-contas-receber td:nth-child(3) {
+    width: 20%; /* Cliente */
+}
+
+#tabela-contas-receber th:nth-child(4),
+#tabela-contas-receber td:nth-child(4) {
+    width: 10%; /* Vencimento */
+}
+
+#tabela-contas-receber th:nth-child(5),
+#tabela-contas-receber td:nth-child(5) {
+    width: 10%; /* Valor Total */
+}
+
+#tabela-contas-receber th:nth-child(6),
+#tabela-contas-receber td:nth-child(6) {
+    width: 10%; /* Valor Pago */
+}
+
+#tabela-contas-receber th:nth-child(7),
+#tabela-contas-receber td:nth-child(7) {
+    width: 10%; /* Data Pagamento */
+}
+
+#tabela-contas-receber th:nth-child(8),
+#tabela-contas-receber td:nth-child(8) {
+    width: 8%; /* Status */
+}
+
+#tabela-contas-receber th:nth-child(9),
+#tabela-contas-receber td:nth-child(9) {
+    width: 10%; /* Forma Pagamento */
+}
+
+#tabela-contas-receber th:nth-child(10),
+#tabela-contas-receber td:nth-child(10) {
+    width: 10%; /* Ações */
+}
+
+/* Autocomplete (manter) */
+.sugestoes-box {
+    position: absolute;
+    background: white;
+    border: 1px solid #ccc;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+}
+
+
+.sugestoes-box div {
+    padding: 8px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+}
+
+.sugestoes-box div:last-child {
+    border-bottom: none;
+}
+
+.sugestoes-box div:hover {
+    background-color: #f0f0f0;
+}
+
+/* Mensagem de status (manter) */
+.mensagem-status {
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    margin: 0 !important; /* Zera todas as margens */
+    padding: 0 !important; /* Garante que não haja preenchimento */
+    border: none !important; /* Garante que não haja borda */
+    line-height: 0 !important; /* Zera a altura da linha */
+    height: 0 !important; /* Garante que o elemento não tenha altura quando vazio */
+    overflow: hidden !important; /* Oculta qualquer conteúdo que possa vazar */
+}
+
+/* Responsividade (manter) */
+@media (max-width: 768px) {
+    .form-linha {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .buttons {
+        flex-direction: column;
+    }
+
+    .campo.botao {
+        margin-top: 10px;
+    }
+
+    #tabela-recebimentos {
+        overflow-x: auto; /* Adiciona barra de rolagem horizontal em telas menores */
+    }
+}

@@ -60,6 +60,17 @@ function initializeDatabase() {
         FOREIGN KEY (venda_id) REFERENCES vendas(id) ON DELETE CASCADE,
         FOREIGN KEY (produto_id) REFERENCES produtos(id)
       )`);
+      db.run(`CREATE TABLE IF NOT EXISTS recebimentos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        venda_id INTEGER,
+        data_vencimento TEXT,
+        valor_total REAL NOT NULL,
+        valor_pago REAL DEFAULT 0,
+        data_pagamento TEXT,
+        status TEXT NOT NULL DEFAULT 'pendente', -- 'pendente', 'pago', 'atrasado', 'cancelado'
+        forma_pagamento TEXT,
+        FOREIGN KEY (venda_id) REFERENCES vendas(id) ON DELETE CASCADE
+      )`);
       console.log("✅ Banco criado com sucesso.");
     });
     } else {
@@ -265,133 +276,247 @@ ipcMain.handle('excluir-produto', async (event, id) => {
   });
 });
 
-
-
+// Registrar venda
 ipcMain.handle('registrar-venda', async (event, dadosVenda) => {
-  return new Promise((resolve, reject) => {
-    const { cliente_id, total, data, vencimento, itens } = dadosVenda;
+    return new Promise((resolve, reject) => {
+        const { cliente_id, total, data: dataLocal, vencimento: vencimentoLocal, itens } = dadosVenda;
 
-    const formatarVencimentoParaDB = (dataString) => {
-      if (!dataString || dataString.length !== 10 || dataString.indexOf('/') === -1) return null;
-      const [dia, mes, ano] = dataString.split('/');
-      return `${ano}-${mes}-${dia}`;
-    };
+        const formatarVencimentoParaDB = (dataString) => {
+            if (!dataString || dataString.length !== 10 || dataString.indexOf('/') === -1) return null;
+            const [dia, mes, ano] = dataString.split('/');
+            return `${ano}-${mes}-${dia}`;
+        };
 
-    const vencimentoFormatado = vencimento ? formatarVencimentoParaDB(vencimento) : null;
+        const vencimentoFormatadoLocal = vencimentoLocal ? formatarVencimentoParaDB(vencimentoLocal) : null;
 
-    db.run(`INSERT INTO vendas (cliente_id, data, data_vencimento, total) VALUES (?, ?, ?, ?)`,
-      [cliente_id, data, vencimentoFormatado, total],
-      function (err) {
-        if (err) {
-          console.error('Erro ao inserir venda:', err.message);
-          return resolve({ success: false, message: 'Erro ao registrar venda.' });
-        }
+        // Converter data da venda para UTC
+        const dataUTC = dataLocal ? new Date(dataLocal).toISOString() : null;
 
-        const venda_id = this.lastID;
+        // Converter data de vencimento para UTC (se existir)
+        const vencimentoUTC = vencimentoFormatadoLocal ? new Date(vencimentoFormatadoLocal + "T00:00:00Z").toISOString().split('T')[0] : null;
 
-        let erroInterno = false;
-        let inseridos = 0;
 
-        const stmtItensVenda = db.prepare(`INSERT INTO itens_venda (venda_id, produto_id, quantidade, preco_unitario) VALUES (?, ?, ?, ?)`);
-        const stmtUpdateEstoque = db.prepare(`UPDATE produtos SET quantidade = quantidade - ? WHERE id = ?`);
+        db.run(`INSERT INTO vendas (cliente_id, data, data_vencimento, total) VALUES (?, ?, ?, ?)`,
+            [cliente_id, dataUTC, vencimentoUTC, total],
+            function (err) {
+                if (err) {
+                    console.error('Erro ao inserir venda:', err.message);
+                    return resolve({ success: false, message: 'Erro ao registrar venda.' });
+                }
 
-        for (const item of itens) {
-          stmtItensVenda.run([venda_id, item.produto_id, item.quantidade, item.preco_unitario], function (err) {
-            if (err) {
-              console.error('Erro ao inserir item de venda:', err.message);
-              erroInterno = true;
-            }
-            inseridos++;
-            if (inseridos === itens.length * 2) finalizar();
-          });
+                const venda_id = this.lastID;
 
-          stmtUpdateEstoque.run([item.quantidade, item.produto_id], function (err) {
-            if (err) {
-              console.error('Erro ao atualizar estoque:', err.message);
-              erroInterno = true;
-            }
-            inseridos++;
-            if (inseridos === itens.length * 2) finalizar();
-          });
-        }
+                let erroInterno = false;
+                let inseridos = 0;
 
-        function finalizar() {
-          stmtItensVenda.finalize();
-          stmtUpdateEstoque.finalize();
-          if (erroInterno) {
-            return resolve({ success: false, message: 'Erro interno ao registrar venda.' });
-          }
-          return resolve({ success: true, message: 'Venda registrada com sucesso!' });
-        }
-      });
-  });
+                const stmtItensVenda = db.prepare(`INSERT INTO itens_venda (venda_id, produto_id, nome_produto, quantidade, preco_unitario) VALUES (?, ?, ?, ?, ?)`);
+                const stmtUpdateEstoque = db.prepare(`UPDATE produtos SET quantidade = quantidade - ? WHERE id = ?`);
+                const stmtBuscarNomeProduto = db.prepare(`SELECT nome FROM produtos WHERE id = ?`);
+
+                for (const item of itens) {
+                    stmtBuscarNomeProduto.get(item.produto_id, (errNome, rowNome) => {
+                        if (errNome) {
+                            console.error('Erro ao buscar nome do produto:', errNome.message);
+                            erroInterno = true;
+                            finalizar();
+                            return;
+                        }
+
+                        const nomeProduto = rowNome ? rowNome.nome : 'Produto não encontrado';
+
+                        stmtItensVenda.run([venda_id, item.produto_id, nomeProduto, item.quantidade, item.preco_unitario], function (errItemVenda) {
+                            if (errItemVenda) {
+                                console.error('Erro ao inserir item de venda:', errItemVenda.message);
+                                erroInterno = true;
+                            }
+                            inseridos++;
+                            if (inseridos === itens.length * 2) finalizar();
+                        });
+
+                        stmtUpdateEstoque.run([item.quantidade, item.produto_id], function (errEstoque) {
+                            if (errEstoque) {
+                                console.error('Erro ao atualizar estoque:', errEstoque.message);
+                                erroInterno = true;
+                            }
+                            inseridos++;
+                            if (inseridos === itens.length * 2) finalizar();
+                        });
+                    });
+                }
+
+                function finalizar() {
+                    stmtItensVenda.finalize();
+                    stmtUpdateEstoque.finalize();
+                    stmtBuscarNomeProduto.finalize();
+                    if (erroInterno) {
+                        return resolve({ success: false, message: 'Erro interno ao registrar venda.' });
+                    }
+                    return resolve({ success: true, message: 'Venda registrada com sucesso!' });
+                }
+            });
+    });
 });
 
 
 ipcMain.handle('buscarVendas', async (event, filtros) => {
-  return new Promise((resolve, reject) => {
-    const { cliente, clienteId, dataInicio, dataFim, vencimentoInicio, vencimentoFim } = filtros;
+    return new Promise((resolve, reject) => {
+        const { cliente, clienteId, dataInicio, dataFim, vencimentoInicio, vencimentoFim } = filtros;
 
-    let query = `
-      SELECT v.id, c.nome as cliente, c.observacao, v.data, v.data_vencimento as vencimento, v.total
-      FROM vendas v
-      JOIN clientes c ON c.id = v.cliente_id
-      WHERE 1 = 1
-    `;
-    const params = [];
+        let query = `
+            SELECT
+                v.id AS venda_id,
+                c.nome AS cliente,
+                c.observacao,
+                v.data,
+                v.data_vencimento AS vencimento,
+                v.total AS total_venda,
+                iv.id AS item_id,
+                iv.nome_produto,
+                iv.quantidade,
+                iv.preco_unitario
+            FROM vendas v
+            JOIN clientes c ON c.id = v.cliente_id
+            LEFT JOIN itens_venda iv ON v.id = iv.venda_id
+            WHERE 1 = 1
+        `;
+        const params = [];
 
-    // Se clienteId for fornecido, busca pelo ID (busca exata)
-    if (clienteId) {
-      query += " AND c.id = ?";
-      params.push(clienteId);
-    } else if (cliente) {
-      query += " AND c.nome LIKE ?";
-      params.push(`%${cliente}%`);
-    }
+        if (clienteId) {
+            query += " AND c.id = ?";
+            params.push(clienteId);
+        } else if (cliente) {
+            query += " AND c.nome LIKE ?";
+            params.push(`%${cliente}%`);
+        }
 
+        const formatarData = (data) => {
+            if (!data || !/^\d{2}\/\d{2}\/\d{4}$/.test(data)) return null;
+            const [dia, mes, ano] = data.split('/');
+            return `${ano}-${mes}-${dia}`;
+        };
 
-    const formatarData = (data) => {
-      if (!data || !/^\d{2}\/\d{2}\/\d{4}$/.test(data)) return null;
-      const [dia, mes, ano] = data.split('/');
-      return `${ano}-${mes}-${dia}`;
-    };
+        if (dataInicio) {
+            query += " AND DATE(v.data) >= DATE(?)";
+            params.push(formatarData(dataInicio));
+        }
 
-    if (dataInicio) {
-      query += " AND DATE(v.data) >= DATE(?)";
-      params.push(formatarData(dataInicio));
-    }
+        if (dataFim) {
+            query += " AND DATE(v.data) <= DATE(?)";
+            params.push(formatarData(dataFim));
+        }
 
-    if (dataFim) {
-      query += " AND DATE(v.data) <= DATE(?)";
-      params.push(formatarData(dataFim));
-    }
+        if (vencimentoInicio) {
+            query += " AND DATE(v.data_vencimento) >= DATE(?)";
+            params.push(formatarData(vencimentoInicio));
+        }
 
-    if (vencimentoInicio) {
-      query += " AND DATE(v.data_vencimento) >= DATE(?)";
-      params.push(formatarData(vencimentoInicio));
-    }
+        if (vencimentoFim) {
+            query += " AND DATE(v.data_vencimento) <= DATE(?)";
+            params.push(formatarData(vencimentoFim));
+        }
 
-    if (vencimentoFim) {
-      query += " AND DATE(v.data_vencimento) <= DATE(?)";
-      params.push(formatarData(vencimentoFim));
-    }
+        query += " ORDER BY v.data DESC, v.id DESC";
 
-    query += " ORDER BY v.data DESC";
+        db.all(query, params, (err, rows) => {
+            if (err) {
+                console.error('Erro ao buscar vendas e itens:', err.message);
+                return reject([]);
+            } else {
+                const vendasDetalhadas = rows.reduce((acc, row) => {
+                    const vendaExistente = acc.find(v => v.venda_id === row.venda_id);
+                    const item = row.item_id ? {
+                        id: row.item_id,
+                        nome_produto: row.nome_produto,
+                        quantidade: row.quantidade,
+                        preco_unitario: row.preco_unitario
+                    } : null;
 
-    db.all(query, params, (err, rows) => {
-      if (err) {
-        console.error('Erro ao buscar vendas:', err.message);
-        return reject([]);
-      } else {
-        const vendasFormatadas = rows.map(venda => ({
-          ...venda,
-          data: new Date(venda.data).toLocaleDateString('pt-BR'),
-          vencimento: venda.vencimento ? new Date(venda.vencimento).toLocaleDateString('pt-BR') : ''
-        }));
-        resolve(vendasFormatadas);
-      }
+                    if (vendaExistente) {
+                        if (item) {
+                            vendaExistente.itens.push(item);
+                        }
+                    } else {
+                        acc.push({
+                            venda_id: row.venda_id,
+                            cliente: row.cliente,
+                            observacao: row.observacao,
+                            data: row.data,
+                            vencimento: row.vencimento,
+                            total_venda: row.total_venda,
+                            itens: item ? [item] : []
+                        });
+                    }
+                    return acc;
+                }, []);
+
+                const vendasFormatadas = vendasDetalhadas.map(venda => ({
+                    ...venda,
+                    data: venda.data ? new Date(venda.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '-',
+                    vencimento: venda.vencimento ? new Date(venda.vencimento).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '-'
+                }));
+
+                resolve(vendasFormatadas);
+            }
+        });
     });
-  });
+});
+
+// Buscar registros de recebimentos
+ipcMain.handle('buscarRecebimentos', async (event, filtros) => {
+  return new Promise((resolve, reject) => {
+    const { status } = filtros;
+    let query = `
+      SELECT r.id, v.id as venda_id, c.nome as cliente, r.data_vencimento, r.valor_total, r.valor_pago, r.data_pagamento, r.status, r.forma_pagamento
+      FROM recebimentos r
+      JOIN vendas v ON v.id = r.venda_id
+      JOIN clientes c ON c.id = v.cliente_id
+      WHERE 1 = 1
+    `;
+    const params = [];
+
+    if (status) {
+      query += " AND r.status = ?";
+      params.push(status);
+    }
+
+    query += " ORDER BY r.data_vencimento ASC";
+
+    db.all(query, params, (err, rows) => {
+      if (err) {
+        console.error('Erro ao buscar recebimentos:', err.message);
+        return reject([]);
+      } else {
+        const recebimentosFormatados = rows.map(recebimento => ({
+          ...recebimento,
+          data_vencimento: recebimento.data_vencimento ? new Date(recebimento.data_vencimento).toLocaleDateString('pt-BR') : '',
+          data_pagamento: recebimento.data_pagamento ? new Date(recebimento.data_pagamento).toLocaleDateString('pt-BR') : ''
+        }));
+        resolve(recebimentosFormatados);
+      }
+    });
+  });
+});
+
+// Atualizar recebimento
+ipcMain.handle('atualizarStatusRecebimento', async (event, { recebimentoId, novoStatus, dataPagamento, formaPagamento }) => {
+  return new Promise((resolve, reject) => {
+    const query = `
+      UPDATE recebimentos
+      SET status = ?,
+          data_pagamento = ?,
+          forma_pagamento = ?
+      WHERE id = ?
+    `;
+    const dataPagamentoFormatada = dataPagamento ? new Date(dataPagamento).toISOString().split('T')[0] : null;
+
+    db.run(query, [novoStatus, dataPagamentoFormatada, formaPagamento, recebimentoId], function (err) {
+      if (err) {
+        console.error('Erro ao atualizar o status do recebimento:', err.message);
+        return resolve({ success: false, message: 'Erro ao atualizar o status do recebimento.' });
+      }
+      resolve({ success: this.changes > 0, message: 'Status do recebimento atualizado com sucesso!' });
+    });
+  });
 });
 
 async function salvarPDF(caminhoArquivo, dadosPDF) {

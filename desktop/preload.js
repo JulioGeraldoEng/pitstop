@@ -24,9 +24,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   buscarVendas: (filtros) => ipcRenderer.invoke('buscarVendas', filtros),
   exportarParaPDF: (htmlContent) => ipcRenderer.invoke('exportarParaPDF', htmlContent),
 
+  // Recebimentos
+  buscarRecebimentos: (filtros) => ipcRenderer.invoke('buscarRecebimentos', filtros),
+  atualizarStatusRecebimento: (data) => ipcRenderer.invoke('atualizarStatusRecebimento', data),
 
-  // Adicione outras APIs aqui se houver
-  // Ex: apagarProduto: (id) => ipcRenderer.invoke('apagar-produto', id),
-  // Ex: atualizarProduto: (produto) => ipcRenderer.invoke('atualizar-produto', produto),
-  
 });

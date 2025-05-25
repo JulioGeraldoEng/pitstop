@@ -1,101 +1,107 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  <title>Recebimento</title>
+    <title>Recebimento</title>
 
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-  <link rel="stylesheet" href="../assets/css/styles.css">
-  <link rel="stylesheet" href="recebimento.css">
+    <link rel="stylesheet" href="../assets/css/styles.css">
+    <link rel="stylesheet" href="recebimento.css">
 
 </head>
 <body>
 
-  <div class="top-bar">
-    <button type="button" onclick="irPara('../dashboard/dashboard.html')">
-      <i class="fas fa-home"></i> Início
-    </button>
-    <button type="button" onclick="logout()">
-      <i class="fas fa-sign-out-alt"></i> Sair
-    </button>
-  </div>
-  
-  <h1>Recebimento</h1>
-  <h1>Relatório de Vendas</h1>
+    <div class="top-bar">
+        <button type="button" onclick="irPara('../dashboard/dashboard.html')">
+            <i class="fas fa-home"></i> Início
+        </button>
+        <button type="button" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Sair
+        </button>
+    </div>
+
+    <h1>Recebimento</h1>
 
     <form class="formulario">
-      <div class="form-linha">
-        <div class="campo">
-          <label for="cliente">Cliente:</label>
-          <input type="text" id="cliente" placeholder="Nome do cliente" autocomplete="off">
-          <div id="sugestoesCliente" class="sugestoes-box"></div>
-        </div>
+        <div class="form-linha">
+            <div class="campo">
+                <label for="cliente">Cliente:</label>
+                <input type="text" id="cliente" placeholder="Nome do cliente" autocomplete="off">
+                <div id="sugestoesCliente" class="sugestoes-box"></div>
+            </div>
 
-        <div class="campo">
-          <label for="dataInicio">Data Inicial:</label>
-          <input type="text" id="dataInicio" placeholder="dd/mm/aaaa" maxlength="10">
-        </div>
+            <div class="campo">
+                <label for="statusRecebimento">Status:</label>
+                <select id="statusRecebimento">
+                    <option value="">Todos</option>
+                    <option value="pendente">Pendentes</option>
+                    <option value="pago">Pagos</option>
+                    <option value="atrasado">Atrasados</option>
+                    <option value="cancelado">Cancelados</option>
+                </select>
+            </div>
 
-        <div class="campo">
-          <label for="dataFim">Data Final:</label>
-          <input type="text" id="dataFim" placeholder="dd/mm/aaaa" maxlength="10">
-        </div>
+            <div class="campo">
+                <label for="dataVencimentoInicio">Venc. Inicial:</label>
+                <input type="text" id="dataVencimentoInicio" placeholder="dd/mm/aaaa" maxlength="10">
+            </div>
 
-        <div class="campo">
-          <label for="vencimentoInicio">Venc. Inicial:</label>
-          <input type="text" id="vencimentoInicio" placeholder="dd/mm/aaaa" maxlength="10">
-        </div>
+            <div class="campo">
+                <label for="dataVencimentoFim">Venc. Final:</label>
+                <input type="text" id="dataVencimentoFim" placeholder="dd/mm/aaaa" maxlength="10">
+            </div>
 
-        <div class="campo">
-          <label for="vencimentoFim">Venc. Final:</label>
-          <input type="text" id="vencimentoFim" placeholder="dd/mm/aaaa" maxlength="10">
-        </div>
+            <div class="campo">
+                <label for="dataPagamentoInicio">Pag. Inicial:</label>
+                <input type="text" id="dataPagamentoInicio" placeholder="dd/mm/aaaa" maxlength="10">
+            </div>
 
-        <div class="campo botao">
-          <label>&nbsp;</label>
-          <div class="buttons">
-            <button id="buscar"><i class="fas fa-search"></i> Buscar</button>
-            <button id="limpar"><i class="fas fa-broom"></i> Limpar</button>
-            <button type="button" id="exportarPdf"><i class="fas fa-file-pdf"></i> Exportar para PDF</button>
-            <button type="button" id="recebimento" onclick="irPara('../recebimento/recebimento.html')">
-              <i class="fas fa-money-bill-wave"></i> Recebimento
-            </button>
-            <button type="button" id="novaVenda" onclick="irPara('../venda/venda.html')" style="white-space: nowrap;">
-              <i class="fas fa-cash-register"></i> <span>Nova Venda</span>
-            </button>
-          </div>
+            <div class="campo">
+                <label for="dataPagamentoFim">Pag. Final:</label>
+                <input type="text" id="dataPagamentoFim" placeholder="dd/mm/aaaa" maxlength="10">
+            </div>
+
+            <div class="campo botao">
+                <label>&nbsp;</label>
+                <div class="buttons">
+                    <button id="buscarRecebimentos"><i class="fas fa-search"></i> Buscar</button>
+                    <button id="limparBuscaRecebimentos"><i class="fas fa-broom"></i> Limpar</button>
+                    <button type="button" id="novaVenda" onclick="irPara('../venda/venda.html')" style="white-space: nowrap;">
+                        <i class="fas fa-cash-register"></i> <span>Nova Venda</span>
+                    </button>
+                </div>
+            </div>
         </div>
-      </div>
     </form>
 
     <p id="mensagem" role="alert" aria-live="polite" class="mensagem-status"></p>
 
-    <div id="tabela-relatorio" style="display: none;">
-      <h2>Resultados</h2>
-      <table id="tabela-vendas" class="tabela-venda">
-        <thead>
-          <tr>
-            <th>Venda</th>
-            <th>Cliente</th>
-            <th>Observação</th>
-            <th>Data da Venda</th>
-            <th>Vencimento</th>
-            <th>Total</th>
-          </tr>
-        </thead>
-        <tbody>
-        
-        </tbody>
-      </table>
+    <div id="tabela-recebimentos" style="display: none;">
+        <h2>Contas a Receber</h2>
+        <table id="tabela-contas-receber" class="tabela-venda">
+            <thead>
+                <tr>
+                    <th>ID Receb.</th>
+                    <th>ID Venda</th>
+                    <th>Cliente</th>
+                    <th>Vencimento</th>
+                    <th>Valor Total</th>
+                    <th>Valor Pago</th>
+                    <th>Data Pagamento</th>
+                    <th>Status</th>
+                    <th>Forma Pagamento</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table>
     </div>
 
-    <div id="resumo-relatorio" class="resumo-venda" style="display: none;">
-      <p id="totalRelatorio"></p>
-    </div>
-
-  <script src="recebimento.js"></script>
+    <script src="recebimento.js"></script>
 </body>
 </html>
