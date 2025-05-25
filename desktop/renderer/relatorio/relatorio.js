@@ -1,24 +1,24 @@
-// Verifica login
+// ===================== [ VERIFICAÇÃO DE LOGIN ] =====================
 if (!localStorage.getItem('usuarioLogado')) {
   window.location.href = '../login/login.html';
 }
 
+// ===================== [ VARIÁVEIS GLOBAIS ] =====================
 let clienteSelecionadoId = null;
 let dadosUltimoRelatorio = [];
 
-// Funções auxiliares que estavam faltando
+const inputCliente = document.getElementById('cliente');
+const sugestoes = document.getElementById('sugestoesCliente');
+const tabelaVendas = document.getElementById('tabela-vendas').querySelector('tbody');
+const totalRelatorio = document.getElementById('totalRelatorio');
+const resumoRelatorioDiv = document.getElementById('resumo-relatorio');
+
+// ===================== [ FUNÇÕES UTILITÁRIAS ] =====================
 function converterParaNumero(valor) {
   if (!valor) return 0;
-  
-  if (typeof valor === 'number') {
-    return valor;
-  }
-  
-  // Remove pontos de milhar e substitui vírgula decimal por ponto
-  const valorLimpo = valor.toString()
-    .replace(/\./g, '')
-    .replace(',', '.');
-  
+  if (typeof valor === 'number') return valor;
+
+  const valorLimpo = valor.toString().replace(/\./g, '').replace(',', '.');
   const numero = parseFloat(valorLimpo);
   return isNaN(numero) ? 0 : numero;
 }
@@ -28,147 +28,93 @@ function formatarMoeda(valor) {
   return numero.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function formatarData(data) {
+  if (!data) return '-';
+  if (typeof data === 'string' && /^\d{2}\/\d{2}\/\d{4}$/.test(data)) return data;
+
+  const dateObj = new Date(data);
+  if (isNaN(dateObj.getTime())) return 'Data inválida';
+
+  const dia = String(dateObj.getDate()).padStart(2, '0');
+  const mes = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const ano = dateObj.getFullYear();
+  return `${dia}/${mes}/${ano}`;
+}
+
+function exibirMensagem(texto, cor) {
+  const mensagem = document.getElementById('mensagem');
+  if (mensagem) {
+    mensagem.textContent = texto || '';
+    mensagem.style.color = cor || '';
+    mensagem.style.display = texto ? 'block' : 'none';
+  }
+}
+
+// ===================== [ DOMContentLoaded ] =====================
 document.addEventListener('DOMContentLoaded', async () => {
   const btnBuscar = document.getElementById('buscar');
   const btnLimpar = document.getElementById('limpar');
-  const tabelaVendas = document.getElementById('tabela-vendas').querySelector('tbody');
   const mensagem = document.getElementById('mensagem');
-  const totalRelatorio = document.getElementById('totalRelatorio');
-  const resumoRelatorioDiv = document.getElementById('resumo-relatorio');
-  const inputCliente = document.getElementById('cliente');
+  const divTabela = document.getElementById('tabela-relatorio');
 
-  // Inicialmente oculta a mensagem e a tabela de resultados
+  // Oculta elementos inicialmente
   mensagem.style.display = 'none';
-  document.getElementById('tabela-relatorio').style.display = 'none';
+  divTabela.style.display = 'none';
   resumoRelatorioDiv.style.display = 'none';
 
-  // Adiciona máscara aos campos de data
+  aplicarMascaraData();
+  configurarEventosBusca(btnBuscar);
+  configurarEventoLimpar(btnLimpar);
+});
+
+// ===================== [ MÁSCARA DE DATA ] =====================
+function aplicarMascaraData() {
   document.querySelectorAll('input[type="text"][placeholder="dd/mm/aaaa"]').forEach(input => {
-    input.addEventListener('input', function(e) {
+    input.addEventListener('input', function (e) {
       let value = e.target.value.replace(/\D/g, '');
-      if (value.length > 2) {
-        value = value.substring(0, 2) + '/' + value.substring(2);
-      }
-      if (value.length > 5) {
-        value = value.substring(0, 5) + '/' + value.substring(5, 9);
-      }
+      if (value.length > 2) value = value.substring(0, 2) + '/' + value.substring(2);
+      if (value.length > 5) value = value.substring(0, 5) + '/' + value.substring(5, 9);
       e.target.value = value.substring(0, 10);
     });
   });
+}
 
-  // Função para formatar data
-  function formatarData(data) {
-    if (!data) return '-';
-    
-    // Se já estiver no formato dd/mm/yyyy
-    if (typeof data === 'string' && /^\d{2}\/\d{2}\/\d{4}$/.test(data)) {
-      return data;
-    }
-    
-    // Tentar converter de outros formatos
-    const dateObj = new Date(data);
-    if (isNaN(dateObj.getTime())) return 'Data inválida';
-    
-    const dia = String(dateObj.getDate()).padStart(2, '0');
-    const mes = String(dateObj.getMonth() + 1).padStart(2, '0');
-    const ano = dateObj.getFullYear();
-    
-    return `${dia}/${mes}/${ano}`;
-  }
-
-  // Buscar vendas
-  btnBuscar.addEventListener('click', async () => {
-    const dataInicio = document.getElementById('dataInicio').value;
-    const dataFim = document.getElementById('dataFim').value;
-    const vencimentoInicio = document.getElementById('vencimentoInicio').value;
-    const vencimentoFim = document.getElementById('vencimentoFim').value;
-
-    const validarData = (data, campo) => {
-      if (data && !/^\d{2}\/\d{2}\/\d{4}$/.test(data)) {
-        exibirMensagem(`Formato de ${campo} inválido (use dd/mm/aaaa)`, 'red');
-        return false;
-      }
-      return true;
+// ===================== [ EVENTO DE BUSCA ] =====================
+function configurarEventosBusca(botao) {
+  botao.addEventListener('click', async () => {
+    const filtros = {
+      cliente: inputCliente.value.trim(),
+      clienteId: clienteSelecionadoId,
+      dataInicio: document.getElementById('dataInicio').value,
+      dataFim: document.getElementById('dataFim').value,
+      vencimentoInicio: document.getElementById('vencimentoInicio').value,
+      vencimentoFim: document.getElementById('vencimentoFim').value
     };
 
-    if (!validarData(dataInicio, 'data inicial')) return;
-    if (!validarData(dataFim, 'data final')) return;
-    if (!validarData(vencimentoInicio, 'vencimento inicial')) return;
-    if (!validarData(vencimentoFim, 'vencimento final')) return;
+    if (!validarFiltrosData(filtros)) return;
 
     try {
-      btnBuscar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Buscando...';
-      btnBuscar.disabled = true;
+      botao.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Buscando...';
+      botao.disabled = true;
       exibirMensagem('');
 
-      const filtros = {
-        cliente: inputCliente.value.trim(),
-        clienteId: clienteSelecionadoId,
-        dataInicio,
-        dataFim,
-        vencimentoInicio,
-        vencimentoFim
-      };
-
       const vendas = await window.electronAPI.buscarVendas(filtros);
+      processarResultados(vendas, filtros);
 
-      const divTabela = document.getElementById('tabela-relatorio');
-      divTabela.style.display = 'none';
-      tabelaVendas.innerHTML = '';
-      resumoRelatorioDiv.style.display = 'none';
-
-      if (vendas && vendas.length > 0) {
-        let totalGeral = 0;
-
-        vendas.forEach(venda => {
-          const valorNumerico = converterParaNumero(venda.total);
-          totalGeral += valorNumerico;
-
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${venda.id || '-'}</td>
-            <td>${venda.cliente || '-'}</td>
-            <td>${venda.observacao || '-'}</td>
-            <td>${formatarData(venda.data)}</td>
-            <td>${formatarData(venda.vencimento)}</td>
-            <td>R$ ${formatarMoeda(valorNumerico)}</td>
-          `;
-          tabelaVendas.appendChild(tr);
-        });
-
-        // Exibir os elementos
-        divTabela.style.display = 'block';
-        resumoRelatorioDiv.style.display = 'block';
-        totalRelatorio.textContent = `Total Geral: R$ ${formatarMoeda(totalGeral)}`;
-        exibirMensagem(`${vendas.length} vendas encontradas.`, 'green');
-
-        // Preencher dados para PDF
-        dadosUltimoRelatorio = vendas;
-        preencherPDF(vendas, {
-          clienteNome: inputCliente.value.trim(),
-          dataInicio,
-          dataFim,
-          vencimentoInicio,
-          vencimentoFim
-        });
-
-      } else {
-        exibirMensagem('Nenhuma venda encontrada com os filtros informados.', 'blue');
-      }
     } catch (error) {
       console.error('Erro ao buscar vendas:', error);
       exibirMensagem('Erro ao conectar com o banco de dados. Verifique sua conexão.', 'red');
     } finally {
-      btnBuscar.innerHTML = '<i class="fas fa-search"></i> Buscar';
-      btnBuscar.disabled = false;
+      botao.innerHTML = '<i class="fas fa-search"></i> Buscar';
+      botao.disabled = false;
     }
   });
+}
 
-  // Limpar filtros
-  btnLimpar.addEventListener('click', () => {
-    limparRelatorio();
-  });
-});
+// ===================== [ EVENTO DE LIMPEZA ] =====================
+function configurarEventoLimpar(botao) {
+  botao.addEventListener('click', limparRelatorio);
+}
 
 function limparRelatorio() {
   document.getElementById('cliente').value = '';
@@ -183,10 +129,64 @@ function limparRelatorio() {
   resumoRelatorioDiv.style.display = 'none';
   clienteSelecionadoId = null;
 }
-// Autocomplete de clientes
-const inputCliente = document.getElementById('cliente');
-const sugestoes = document.getElementById('sugestoesCliente');
 
+// ===================== [ VALIDAÇÃO DE DATAS ] =====================
+function validarFiltrosData({ dataInicio, dataFim, vencimentoInicio, vencimentoFim }) {
+  const validarData = (data, campo) => {
+    if (data && !/^\d{2}\/\d{2}\/\d{4}$/.test(data)) {
+      exibirMensagem(`Formato de ${campo} inválido (use dd/mm/aaaa)`, 'red');
+      return false;
+    }
+    return true;
+  };
+
+  return (
+    validarData(dataInicio, 'data inicial') &&
+    validarData(dataFim, 'data final') &&
+    validarData(vencimentoInicio, 'vencimento inicial') &&
+    validarData(vencimentoFim, 'vencimento final')
+  );
+}
+
+// ===================== [ PROCESSAMENTO DOS RESULTADOS ] =====================
+function processarResultados(vendas, filtros) {
+  const divTabela = document.getElementById('tabela-relatorio');
+  tabelaVendas.innerHTML = '';
+  resumoRelatorioDiv.style.display = 'none';
+
+  if (vendas && vendas.length > 0) {
+    let totalGeral = 0;
+
+    vendas.forEach(venda => {
+      const valor = converterParaNumero(venda.total);
+      totalGeral += valor;
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${venda.id || '-'}</td>
+        <td>${venda.cliente || '-'}</td>
+        <td>${venda.observacao || '-'}</td>
+        <td>${formatarData(venda.data)}</td>
+        <td>${formatarData(venda.vencimento)}</td>
+        <td>R$ ${formatarMoeda(valor)}</td>
+      `;
+      tabelaVendas.appendChild(tr);
+    });
+
+    divTabela.style.display = 'block';
+    resumoRelatorioDiv.style.display = 'block';
+    totalRelatorio.textContent = `Total Geral: R$ ${formatarMoeda(totalGeral)}`;
+    exibirMensagem(`${vendas.length} vendas encontradas.`, 'green');
+
+    dadosUltimoRelatorio = vendas;
+    preencherPDF(vendas, filtros);
+
+  } else {
+    exibirMensagem('Nenhuma venda encontrada com os filtros informados.', 'blue');
+  }
+}
+
+// ===================== [ AUTOCOMPLETE DE CLIENTES ] =====================
 function posicionarSugestoes(input, box) {
   const rect = input.getBoundingClientRect();
   box.style.left = `${rect.left + window.scrollX}px`;
@@ -207,9 +207,7 @@ inputCliente.addEventListener('input', async () => {
     const resultados = await window.electronAPI.buscarClientesPorNome(termo);
 
     if (resultados.length === 0) {
-      const div = document.createElement('div');
-      div.textContent = 'Nenhum cliente encontrado';
-      sugestoes.appendChild(div);
+      sugestoes.innerHTML = '<div>Nenhum cliente encontrado</div>';
     } else {
       resultados.forEach(cliente => {
         const div = document.createElement('div');
@@ -230,7 +228,6 @@ inputCliente.addEventListener('input', async () => {
   }
 });
 
-// Oculta sugestões ao clicar fora
 document.addEventListener('click', (e) => {
   if (!sugestoes.contains(e.target) && e.target !== inputCliente) {
     sugestoes.innerHTML = '';
@@ -238,22 +235,7 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Exibe mensagem colorida
-function exibirMensagem(texto, cor) {
-  const mensagem = document.getElementById('mensagem');
-  if (mensagem) {
-    if (texto) {
-      mensagem.textContent = texto;
-      mensagem.style.color = cor;
-      mensagem.style.display = 'block';
-    } else {
-      mensagem.textContent = '';
-      mensagem.style.display = 'none';
-    }
-  }
-}
-
-// Exportar para PDF
+// ===================== [ EXPORTAÇÃO PARA PDF ] =====================
 document.getElementById('exportarPdf').addEventListener('click', async (e) => {
   e.preventDefault();
 
@@ -263,26 +245,21 @@ document.getElementById('exportarPdf').addEventListener('click', async (e) => {
   }
 
   try {
-    // 1. Criar um clone dos elementos que queremos no PDF
     const divRelatorio = document.getElementById('tabela-relatorio').cloneNode(true);
     const titulo = divRelatorio.querySelector('h2');
     const tabela = divRelatorio.querySelector('table');
     const resumo = document.getElementById('resumo-relatorio').cloneNode(true);
 
-    // 2. Ajustar estilos diretamente no clone
     divRelatorio.style.margin = '0';
     divRelatorio.style.padding = '0';
     divRelatorio.style.boxShadow = 'none';
-    
     if (titulo) {
       titulo.style.margin = '0 0 5px 0';
       titulo.style.padding = '0';
     }
-
     tabela.style.marginTop = '0';
     tabela.style.width = '100%';
 
-    // 3. Criar um container limpo para o PDF
     const htmlParaPDF = `
       <!DOCTYPE html>
       <html>
@@ -290,7 +267,7 @@ document.getElementById('exportarPdf').addEventListener('click', async (e) => {
           <meta charset="UTF-8">
           <style>
             body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-            h2 { color: #0078d7; margin: 0 0 5px 0; padding: 0; }
+            h2 { color: #0078d7; margin: 0 0 5px 0; }
             table { width: 100%; border-collapse: collapse; margin-top: 0; }
             th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
             th { background-color: #0078d7; color: white; }
@@ -305,20 +282,17 @@ document.getElementById('exportarPdf').addEventListener('click', async (e) => {
       </html>
     `;
 
-    // 4. Enviar apenas o conteúdo limpo para o Electron
     const caminho = await window.electronAPI.exportarParaPDF(htmlParaPDF);
-
     exibirMensagem(`PDF salvo com sucesso em: ${caminho}`, 'green');
-    alert(`PDF salvo com sucesso em: ${caminho}`);
+    //alert(`PDF salvo com sucesso em: ${caminho}`);
+
   } catch (error) {
     console.error('Erro ao salvar PDF:', error);
-    alert('Erro ao salvar PDF: ' + error.message);
     exibirMensagem('Erro ao salvar PDF. Verifique o console para detalhes.', 'red');
   }
 });
 
-
-// Preencher dados para PDF
+// ===================== [ PREENCHIMENTO DE DADOS PARA PDF ] =====================
 function preencherPDF(vendas, filtros) {
   const divFiltros = document.getElementById('pdf-filtros');
   const tbodyPDF = document.querySelector('#pdf-tabela tbody');
@@ -328,23 +302,21 @@ function preencherPDF(vendas, filtros) {
   divFiltros.innerHTML = '';
   totalPDF.textContent = '';
 
-  // Montar descrição dos filtros aplicados
-  let filtrosTexto = 'Filtros aplicados: ';
-  const filtrosArray = [];
-  
-  if (filtros.clienteNome) filtrosArray.push(`Cliente: ${filtros.clienteNome}`);
-  if (filtros.dataInicio) filtrosArray.push(`Data Inicial: ${filtros.dataInicio}`);
-  if (filtros.dataFim) filtrosArray.push(`Data Final: ${filtros.dataFim}`);
-  if (filtros.vencimentoInicio) filtrosArray.push(`Vencimento Inicial: ${filtros.vencimentoInicio}`);
-  if (filtros.vencimentoFim) filtrosArray.push(`Vencimento Final: ${filtros.vencimentoFim}`);
-  
-  divFiltros.textContent = filtrosTexto + filtrosArray.join('; ');
+  const filtrosTexto = [
+    filtros.clienteNome && `Cliente: ${filtros.clienteNome}`,
+    filtros.dataInicio && `Data Inicial: ${filtros.dataInicio}`,
+    filtros.dataFim && `Data Final: ${filtros.dataFim}`,
+    filtros.vencimentoInicio && `Vencimento Inicial: ${filtros.vencimentoInicio}`,
+    filtros.vencimentoFim && `Vencimento Final: ${filtros.vencimentoFim}`
+  ].filter(Boolean).join('; ');
+
+  divFiltros.textContent = `Filtros aplicados: ${filtrosTexto}`;
 
   let totalGeral = 0;
 
   vendas.forEach(venda => {
-    const valorNumerico = converterParaNumero(venda.total);
-    totalGeral += valorNumerico;
+    const valor = converterParaNumero(venda.total);
+    totalGeral += valor;
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -353,7 +325,7 @@ function preencherPDF(vendas, filtros) {
       <td>${venda.observacao || '-'}</td>
       <td>${formatarData(venda.data)}</td>
       <td>${formatarData(venda.vencimento)}</td>
-      <td>R$ ${formatarMoeda(valorNumerico)}</td>
+      <td>R$ ${formatarMoeda(valor)}</td>
     `;
     tbodyPDF.appendChild(tr);
   });
@@ -361,7 +333,7 @@ function preencherPDF(vendas, filtros) {
   totalPDF.textContent = `Total Geral: R$ ${formatarMoeda(totalGeral)}`;
 }
 
-// Navegação
+// ===================== [ NAVEGAÇÃO / LOGOUT ] =====================
 function irPara(pagina) {
   window.location.href = pagina;
 }

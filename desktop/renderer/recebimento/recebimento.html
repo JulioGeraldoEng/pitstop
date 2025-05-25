@@ -24,6 +24,77 @@
   </div>
   
   <h1>Recebimento</h1>
+  <h1>Relatório de Vendas</h1>
+
+    <form class="formulario">
+      <div class="form-linha">
+        <div class="campo">
+          <label for="cliente">Cliente:</label>
+          <input type="text" id="cliente" placeholder="Nome do cliente" autocomplete="off">
+          <div id="sugestoesCliente" class="sugestoes-box"></div>
+        </div>
+
+        <div class="campo">
+          <label for="dataInicio">Data Inicial:</label>
+          <input type="text" id="dataInicio" placeholder="dd/mm/aaaa" maxlength="10">
+        </div>
+
+        <div class="campo">
+          <label for="dataFim">Data Final:</label>
+          <input type="text" id="dataFim" placeholder="dd/mm/aaaa" maxlength="10">
+        </div>
+
+        <div class="campo">
+          <label for="vencimentoInicio">Venc. Inicial:</label>
+          <input type="text" id="vencimentoInicio" placeholder="dd/mm/aaaa" maxlength="10">
+        </div>
+
+        <div class="campo">
+          <label for="vencimentoFim">Venc. Final:</label>
+          <input type="text" id="vencimentoFim" placeholder="dd/mm/aaaa" maxlength="10">
+        </div>
+
+        <div class="campo botao">
+          <label>&nbsp;</label>
+          <div class="buttons">
+            <button id="buscar"><i class="fas fa-search"></i> Buscar</button>
+            <button id="limpar"><i class="fas fa-broom"></i> Limpar</button>
+            <button type="button" id="exportarPdf"><i class="fas fa-file-pdf"></i> Exportar para PDF</button>
+            <button type="button" id="recebimento" onclick="irPara('../recebimento/recebimento.html')">
+              <i class="fas fa-money-bill-wave"></i> Recebimento
+            </button>
+            <button type="button" id="novaVenda" onclick="irPara('../venda/venda.html')" style="white-space: nowrap;">
+              <i class="fas fa-cash-register"></i> <span>Nova Venda</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <p id="mensagem" role="alert" aria-live="polite" class="mensagem-status"></p>
+
+    <div id="tabela-relatorio" style="display: none;">
+      <h2>Resultados</h2>
+      <table id="tabela-vendas" class="tabela-venda">
+        <thead>
+          <tr>
+            <th>Venda</th>
+            <th>Cliente</th>
+            <th>Observação</th>
+            <th>Data da Venda</th>
+            <th>Vencimento</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+        
+        </tbody>
+      </table>
+    </div>
+
+    <div id="resumo-relatorio" class="resumo-venda" style="display: none;">
+      <p id="totalRelatorio"></p>
+    </div>
 
   <script src="recebimento.js"></script>
 </body>

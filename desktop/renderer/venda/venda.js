@@ -213,19 +213,22 @@ function atualizarLista() {
     total += subtotal;
 
     const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${clienteNomeSelecionado || 'N/A'}</td> 
-      <td>${item.nome}</td>
-      <td>R$ ${item.preco_unitario.toFixed(2).replace('.', ',')}</td>
-      <td>${item.quantidade}</td>
-      <td>R$ ${subtotal.toFixed(2).replace('.', ',')}</td>
-      <td>${item.vencimento}</td>
-      <td>
-        <button class="btn-remover" onclick="excluirProdutoTabela(${index}, this)"><i class="fas fa-trash-alt"></i></button>
-      </td>
-    `;
-    tabela.appendChild(tr);
-  });
+      tr.innerHTML = `
+        <td>${clienteNomeSelecionado || 'N/A'}</td> 
+        <td>${item.nome}</td>
+        <td>R$ ${item.preco_unitario.toFixed(2).replace('.', ',')}</td>
+        <td>${item.quantidade}</td>
+        <td>R$ ${subtotal.toFixed(2).replace('.', ',')}</td>
+        <td>${item.vencimento}</td>
+        <td>
+          <button class="btn-remover" data-index="${index}">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </td>
+      `;
+      tabela.appendChild(tr);
+    });
+
 
   totalVenda.textContent = itensVenda.length > 0
     ? `Total da Venda: R$ ${total.toFixed(2).replace('.', ',')}`
@@ -239,14 +242,13 @@ function atualizarLista() {
   } else if (vencimentoDisplay) {
     vencimentoDisplay.textContent = '';
   }
-
+  
   document.querySelectorAll('.btn-remover').forEach(btn => {
     btn.onclick = (e) => {
       const index = e.currentTarget.dataset.index;
-      if (confirm('Deseja remover este item?')) {
-        itensVenda.splice(index, 1);
-        atualizarLista();
-      }
+      itensVenda.splice(index, 1);
+      atualizarLista();
+      exibirMensagem('Produto removido da venda.', 'green');
     };
   });
 

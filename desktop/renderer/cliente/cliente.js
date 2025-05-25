@@ -3,51 +3,64 @@ if (!localStorage.getItem('usuarioLogado')) {
   window.location.href = '../login/login.html';
 }
 
-document.getElementById('clienteForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  const nome = document.getElementById('nome').value.trim();
-  const telefone = document.getElementById('telefone').value.trim();
-  const observacao = document.getElementById('observacao').value.trim();
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('clienteForm');
+  const inputTelefone = document.getElementById('telefone');
+  const inputNome = document.getElementById('nome');
   const mensagem = document.getElementById('mensagem');
 
-  const telefoneLimpo = telefone.replace(/\D/g, '');
+  // Formata dinamicamente o número de telefone conforme digitado
+  inputTelefone.addEventListener('input', formatarTelefone);
 
-  if (!nome) {
-    mensagem.textContent = 'O nome é obrigatório.';
-    mensagem.style.color = 'red';
-    return;
-  }
+  // Configura autocomplete para o campo de nome
+  configurarAutocompleteNome(inputNome);
 
-  if (telefoneLimpo.length < 10) {
-    mensagem.textContent = 'Telefone inválido. Use com DDD (ex: (14) 99999-8888).';
-    mensagem.style.color = 'red';
-    return;
-  }
+  // Lida com o envio do formulário de cadastro
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-  try {
-    const resultado = await window.electronAPI.salvarCliente({
-      nome,
-      telefone: telefoneLimpo,
-      observacao
-    });
+    const nome = inputNome.value.trim();
+    const telefone = inputTelefone.value.trim().replace(/\D/g, '');
+    const observacao = document.getElementById('observacao').value.trim();
 
-    if (resultado.success) {
-      mensagem.textContent = 'Cliente cadastrado com sucesso!';
-      mensagem.style.color = 'green';
-      document.getElementById('clienteForm').reset();
-    } else {
-      mensagem.textContent = resultado.message || 'Erro ao salvar cliente.';
-      mensagem.style.color = 'red';
+    if (!nome) {
+      exibirMensagem('O nome é obrigatório.', 'red');
+      return;
     }
-  } catch (error) {
-    console.error('Erro ao salvar cliente:', error);
-    mensagem.textContent = 'Erro interno. Verifique o console.';
-    mensagem.style.color = 'red';
+
+    if (telefone.length < 10) {
+      exibirMensagem('Telefone inválido. Use com DDD (ex: (14) 99999-8888).', 'red');
+      return;
+    }
+
+    try {
+      const resultado = await window.electronAPI.salvarCliente({ nome, telefone, observacao });
+      if (resultado.success) {
+        exibirMensagem('Cliente cadastrado com sucesso!', 'green');
+        form.reset();
+      } else {
+        exibirMensagem(resultado.message || 'Erro ao salvar cliente.', 'red');
+      }
+    } catch (error) {
+      console.error('Erro ao salvar cliente:', error);
+      exibirMensagem('Erro interno. Verifique o console.', 'red');
+    }
+  });
+
+  // Botão para listar clientes cadastrados
+  const btnClientes = document.getElementById('btnClientesCadastrados');
+  if (btnClientes) {
+    btnClientes.addEventListener('click', carregarClientes);
+  }
+
+  // Função para exibir mensagens ao usuário
+  function exibirMensagem(texto, cor) {
+    mensagem.textContent = texto;
+    mensagem.style.color = cor;
   }
 });
 
-// ===================== FORMATAÇÃO DINÂMICA DO TELEFONE =====================
+// ===================== FORMATAÇÃO DE TELEFONE =====================
 function formatarTelefone(event) {
   const input = event.target;
   let valor = input.value.replace(/\D/g, '');
@@ -65,20 +78,17 @@ function formatarTelefone(event) {
   input.value = valor;
 }
 
-// Aplica formatação ao input de telefone principal
-document.addEventListener('DOMContentLoaded', () => {
-  const inputTelefone = document.getElementById('telefone');
-  inputTelefone.addEventListener('input', formatarTelefone);
-
-  // Autocomplete por nome
-  const inputNome = document.getElementById('nome');
+// ===================== AUTOCOMPLETE =====================
+function configurarAutocompleteNome(inputNome) {
   const sugestoes = document.createElement('div');
   sugestoes.id = 'sugestoes-clientes';
-  sugestoes.style.position = 'absolute';
-  sugestoes.style.background = 'white';
-  sugestoes.style.border = '1px solid #ccc';
-  sugestoes.style.zIndex = '1000';
-  sugestoes.style.display = 'none';
+  Object.assign(sugestoes.style, {
+    position: 'absolute',
+    background: 'white',
+    border: '1px solid #ccc',
+    zIndex: '1000',
+    display: 'none',
+  });
   document.body.appendChild(sugestoes);
 
   inputNome.addEventListener('input', async () => {
@@ -94,8 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
     clientes.forEach(cliente => {
       const div = document.createElement('div');
       div.textContent = cliente.nome;
-      div.style.padding = '5px';
-      div.style.cursor = 'pointer';
+      Object.assign(div.style, { padding: '5px', cursor: 'pointer' });
       div.addEventListener('click', () => {
         inputNome.value = cliente.nome;
         sugestoes.style.display = 'none';
@@ -115,52 +124,51 @@ document.addEventListener('DOMContentLoaded', () => {
       sugestoes.style.display = 'none';
     }
   });
+}
 
-  // Botão Clientes Cadastrados
-  const btnClientes = document.getElementById('btnClientesCadastrados');
-  if (btnClientes) {
-    btnClientes.addEventListener('click', async () => {
-      const container = document.getElementById('clientesContainer');
-      container.style.display = 'block';
-      const tbody = document.querySelector('#tabelaClientes tbody');
-      tbody.innerHTML = '';
+// ===================== LISTAGEM DE CLIENTES =====================
+async function carregarClientes() {
+  const container = document.getElementById('clientesContainer');
+  container.style.display = 'block';
 
-      try {
-        const clientes = await window.electronAPI.getClientes();
-        if (clientes.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5">Nenhum cliente cadastrado.</td></tr>';
-          return;
-        }
+  const tbody = document.querySelector('#tabelaClientes tbody');
+  tbody.innerHTML = '';
 
-        clientes.forEach(cliente => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${cliente.id}</td>
-            <td><input type="text" value="${cliente.nome}" /></td>
-            <td><input type="text" value="${formatarTelefoneTexto(cliente.telefone)}" class="telefone-tabela" /></td>
-            <td><input type="text" value="${cliente.observacao || ''}" /></td>
-            <td>
-              <button class="btn-alterar" onclick="atualizarClienteTabela(${cliente.id}, this)"><i class="fas fa-edit"></i></button>
-              <button class="btn-remover" onclick="excluirClienteTabela(${cliente.id}, this)"><i class="fas fa-trash-alt"></i></button>
-            </td>
-          `;
-          tbody.appendChild(tr);
-        });
+  try {
+    const clientes = await window.electronAPI.getClientes();
 
-        // Aplica formatação nos inputs da tabela
-        document.querySelectorAll('.telefone-tabela').forEach(input => {
-          input.addEventListener('input', formatarTelefone);
-        });
+    if (clientes.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5">Nenhum cliente cadastrado.</td></tr>';
+      return;
+    }
 
-      } catch (error) {
-        console.error('Erro ao buscar clientes:', error);
-        tbody.innerHTML = '<tr><td colspan="5">Erro ao carregar clientes.</td></tr>';
-      }
+    clientes.forEach(cliente => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${cliente.id}</td>
+        <td><input type="text" value="${cliente.nome}" /></td>
+        <td><input type="text" value="${formatarTelefoneTexto(cliente.telefone)}" class="telefone-tabela" /></td>
+        <td><input type="text" value="${cliente.observacao || ''}" /></td>
+        <td>
+          <button class="btn-alterar" onclick="atualizarClienteTabela(${cliente.id}, this)"><i class="fas fa-edit"></i></button>
+          <button class="btn-remover" onclick="excluirClienteTabela(${cliente.id}, this)"><i class="fas fa-trash-alt"></i></button>
+        </td>
+      `;
+      tbody.appendChild(tr);
     });
-  }
-});
 
-// Formata telefone recebido do banco para exibição
+    document.querySelectorAll('.telefone-tabela').forEach(input => {
+      input.addEventListener('input', formatarTelefone);
+    });
+
+  } catch (error) {
+    console.error('Erro ao buscar clientes:', error);
+    tbody.innerHTML = '<tr><td colspan="5">Erro ao carregar clientes.</td></tr>';
+  }
+}
+
+// ===================== FUNÇÕES DE TABELA =====================
+// Formata telefone para exibição
 function formatarTelefoneTexto(telefone) {
   const valor = telefone.replace(/\D/g, '');
   if (valor.length === 11) {
@@ -172,49 +180,55 @@ function formatarTelefoneTexto(telefone) {
   return telefone;
 }
 
-// Ações da Tabela
-window.atualizarClienteTabela = async (id, btn) => {
+// Atualiza cliente
+function atualizarClienteTabela(id, btn) {
   const row = btn.closest('tr');
   const nome = row.querySelector('td:nth-child(2) input').value.trim();
   const telefone = row.querySelector('td:nth-child(3) input').value.trim().replace(/\D/g, '');
   const observacao = row.querySelector('td:nth-child(4) input').value.trim();
+  const mensagem = document.getElementById('mensagem');
 
-  if (!nome || telefone.length < 10) {
-    alert('Preencha corretamente o nome e o telefone.');
-    return;
-  }
+  window.electronAPI.atualizarCliente({ id, nome, telefone, observacao })
+    .then(resultado => {
+      if (resultado.success) {
+        mensagem.textContent = 'Cliente atualizado com sucesso!';
+        mensagem.style.color = 'green';
+        setTimeout(() => location.reload(), 2000);
+      } else {
+        mensagem.textContent = resultado.message || 'Erro ao atualizar cliente.';
+        mensagem.style.color = 'orange';
+      }
+    })
+    .catch(error => {
+      console.error('Erro ao atualizar cliente:', error);
+      mensagem.textContent = 'Erro interno ao atualizar.';
+      mensagem.style.color = 'red';
+    });
+}
 
-  try {
-    const resultado = await window.electronAPI.atualizarCliente({ id, nome, telefone, observacao });
-    if (resultado.success) {
-      alert('Cliente atualizado com sucesso!');
-    } else {
-      alert(resultado.message || 'Erro ao atualizar cliente.');
-    }
-  } catch (error) {
-    console.error('Erro ao atualizar cliente:', error);
-    alert('Erro interno ao atualizar.');
-  }
-};
+// Exclui cliente
+function excluirClienteTabela(id) {
+  const mensagem = document.getElementById('mensagem');
 
-window.excluirClienteTabela = async (id, btn) => {
-  if (!confirm('Deseja realmente excluir este cliente?')) return;
+  window.electronAPI.excluirCliente(id)
+    .then(resultado => {
+      if (resultado.success) {
+        mensagem.textContent = 'Cliente excluído com sucesso.';
+        mensagem.style.color = 'red';
+        setTimeout(() => location.reload(), 2000);
+      } else {
+        mensagem.textContent = resultado.message || 'Erro ao excluir cliente.';
+        mensagem.style.color = 'orange';
+      }
+    })
+    .catch(error => {
+      console.error('Erro ao excluir cliente:', error);
+      mensagem.textContent = 'Erro interno ao excluir.';
+      mensagem.style.color = 'red';
+    });
+}
 
-  try {
-    const resultado = await window.electronAPI.excluirCliente(id);
-    if (resultado.success) {
-      btn.closest('tr').remove();
-      alert('Cliente excluído com sucesso!');
-    } else {
-      alert(resultado.message || 'Erro ao excluir cliente.');
-    }
-  } catch (error) {
-    console.error('Erro ao excluir cliente:', error);
-    alert('Erro interno ao excluir.');
-  }
-};
-
-// Funções auxiliares
+// ===================== NAVEGAÇÃO =====================
 function irPara(pagina) {
   window.location.href = pagina;
 }

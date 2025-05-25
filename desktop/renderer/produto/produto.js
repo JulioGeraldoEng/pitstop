@@ -88,17 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnProdutosCadastrados').addEventListener('click', carregarProdutosNaTabela);
 });
 
-// Função para navegar entre páginas
-function irPara(pagina) {
-  window.location.href = pagina;
-}
-
-// Logout
-function logout() {
-  localStorage.removeItem('usuarioLogado');
-  window.location.href = '../login/login.html';
-}
-
 // Carrega produtos na tabela HTML
 async function carregarProdutosNaTabela() {
   const container = document.getElementById('produtosContainer');
@@ -138,42 +127,63 @@ async function carregarProdutosNaTabela() {
   }
 }
 
-// Atualizar produto a partir da tabela
-window.atualizarProdutoTabela = async (id, button) => {
-  const row = button.closest('tr');
+// Ações da Tabela
+// Atualiza produto na tabela
+function atualizarProdutoTabela(id, btn) {
+  const row = btn.closest('tr');
   const nome = row.querySelector('td:nth-child(2) input').value.trim();
   const preco = parseFloat(row.querySelector('td:nth-child(3) input').value);
   const quantidade = parseInt(row.querySelector('td:nth-child(4) input').value);
 
-  if (!nome || isNaN(preco) || preco <= 0 || isNaN(quantidade) || quantidade < 0) {
-    alert('Preencha os campos corretamente.');
-    return;
-  }
+  window.electronAPI.atualizarProduto({ id, nome, preco, quantidade })
+    .then((resultado) => {
+      if (resultado.success) {
+        mensagem.textContent = 'Produto atualizado com sucesso!';
+        mensagem.style.color = 'green';
+        setTimeout(() => {
+          location.reload();
+        }, 2000);
+      } else {
+        mensagem.textContent = resultado.message || 'Erro ao atualizar produto.';
+        mensagem.style.color = 'orange';
+      }
+    })
+    .catch((erro) => {
+      console.error('Erro ao atualizar produto:', erro);
+      mensagem.textContent = 'Erro interno ao atualizar.';
+      mensagem.style.color = 'red';
+    });
+}
 
-  try {
-    const result = await window.electronAPI.atualizarProduto({ id, nome, preco, quantidade });
-    alert(result.success ? 'Produto atualizado com sucesso!' : (result.message || 'Erro ao atualizar produto.'));
-  } catch (error) {
-    console.error('Erro ao atualizar produto:', error);
-    alert('Erro interno.');
-  }
-};
+// Exclui produto da tabela
+function excluirProdutoTabela(id) {  
+  window.electronAPI.excluirProduto(id)
+    .then((resultado) => {
+      if (resultado.success) {
+        mensagem.textContent = 'Produto excluído com sucesso.';
+        mensagem.style.color = 'red';
+        setTimeout(() => {
+          location.reload();
+        }, 2000);
+      } else {
+        mensagem.textContent = resultado.message || 'Erro ao excluir produto.';
+        mensagem.style.color = 'orange';
+      }
+    })
+    .catch((erro) => {
+      console.error('Erro ao excluir produto:', erro);
+      mensagem.textContent = 'Erro interno ao excluir.';
+      mensagem.style.color = 'red';
+    });
+}
 
-// Excluir produto a partir da tabela
-window.excluirProdutoTabela = async (id, button) => {
-  if (!confirm('Deseja realmente excluir este produto?')) return;
+// Função para navegar entre páginas
+function irPara(pagina) {
+  window.location.href = pagina;
+}
 
-  try {
-    const result = await window.electronAPI.excluirProduto(id);
-    if (result.success) {
-      const row = button.closest('tr');
-      row.remove();
-      alert('Produto excluído com sucesso!');
-    } else {
-      alert(result.message || 'Erro ao excluir produto.');
-    }
-  } catch (error) {
-    console.error('Erro ao excluir produto:', error);
-    alert('Erro interno.');
-  }
-};
+// Logout
+function logout() {
+  localStorage.removeItem('usuarioLogado');
+  window.location.href = '../login/login.html';
+}
