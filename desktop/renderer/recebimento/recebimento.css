@@ -3,7 +3,7 @@
     display: flex;
     gap: 20px;
     flex-wrap: wrap;
-    align-items: flex-end;
+    align-items: baseline;
     /* A margem inferior padrão será sobrescrita abaixo para o último elemento */
     margin-bottom: 20px; /* Mantém para outras form-linhas, mas será ajustado para a última */
 }
@@ -242,4 +242,11 @@ button#novaVenda:hover {
     #tabela-recebimentos {
         overflow-x: auto; /* Adiciona barra de rolagem horizontal em telas menores */
     }
+}
+
+.status-dropdown {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    font-size: 0.9em;
 }

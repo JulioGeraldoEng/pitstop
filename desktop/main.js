@@ -73,7 +73,7 @@ function initializeDatabase() {
       )`);
       console.log("✅ Banco criado com sucesso.");
     });
-    } else {
+  } else {
     console.log("📂 Banco já existente. Nenhuma alteração feita.");
   }
 }
@@ -117,21 +117,21 @@ ipcMain.handle('login-attempt', async (event, { username, password }) => {
       (err, row) => {
         if (err) {
           console.error('Erro no banco de dados:', err);
-          return resolve({ 
-            success: false, 
-            message: 'Erro no servidor. Tente novamente.' 
+          return resolve({
+            success: false,
+            message: 'Erro no servidor. Tente novamente.'
           });
         }
 
         if (row) {
-          resolve({ 
+          resolve({
             success: true,
             userId: row.id
           });
         } else {
-          resolve({ 
-            success: false, 
-            message: 'Usuário ou senha incorretos' 
+          resolve({
+            success: false,
+            message: 'Usuário ou senha incorretos'
           });
         }
       }
@@ -306,6 +306,20 @@ ipcMain.handle('registrar-venda', async (event, dadosVenda) => {
 
                 const venda_id = this.lastID;
 
+                // Inserir registro na tabela de recebimentos
+                db.run(`INSERT INTO recebimentos (venda_id, data_vencimento, valor_total) VALUES (?, ?, ?)`,
+                    [venda_id, vencimentoUTC, total],
+                    function (errRecebimento) {
+                        if (errRecebimento) {
+                            console.error('Erro ao inserir dados na tabela de recebimentos:', errRecebimento.message);
+                            console.log('➡️ Erro ao inserir recebimento para a venda ID:', venda_id, errRecebimento); // ADICIONADO
+                            // Você pode optar por desfazer a inserção da venda aqui, dependendo da sua lógica de negócio
+                            return resolve({ success: false, message: 'Erro ao registrar recebimento.' });
+                        }
+                        console.log('➡️ Recebimento registrado com sucesso para a venda ID:', venda_id); // ADICIONADO
+                    }
+                );
+
                 let erroInterno = false;
                 let inseridos = 0;
 
@@ -357,7 +371,7 @@ ipcMain.handle('registrar-venda', async (event, dadosVenda) => {
     });
 });
 
-
+// Buscar vendas e itens
 ipcMain.handle('buscarVendas', async (event, filtros) => {
     return new Promise((resolve, reject) => {
         const { cliente, clienteId, dataInicio, dataFim, vencimentoInicio, vencimentoFim } = filtros;
@@ -462,61 +476,165 @@ ipcMain.handle('buscarVendas', async (event, filtros) => {
 });
 
 // Buscar registros de recebimentos
+// No seu arquivo de backend do Electron (ex: main.js ou onde está o ipcMain)
 ipcMain.handle('buscarRecebimentos', async (event, filtros) => {
-  return new Promise((resolve, reject) => {
-    const { status } = filtros;
-    let query = `
-      SELECT r.id, v.id as venda_id, c.nome as cliente, r.data_vencimento, r.valor_total, r.valor_pago, r.data_pagamento, r.status, r.forma_pagamento
-      FROM recebimentos r
-      JOIN vendas v ON v.id = r.venda_id
-      JOIN clientes c ON c.id = v.cliente_id
-      WHERE 1 = 1
-    `;
-    const params = [];
+  return new Promise((resolve, reject) => {
+    const { status, cliente } = filtros;
+    let query = `
+      SELECT r.id, v.id as venda_id, c.nome as cliente, r.data_vencimento, r.valor_total, r.valor_pago, r.data_pagamento, r.status, r.forma_pagamento
+      FROM recebimentos r
+      JOIN vendas v ON v.id = r.venda_id
+      JOIN clientes c ON c.id = v.cliente_id
+      WHERE 1 = 1
+    `;
+    const params = [];
 
-    if (status) {
-      query += " AND r.status = ?";
-      params.push(status);
-    }
+    if (status) {
+      query += " AND r.status = ?";
+      params.push(status);
+    }
 
-    query += " ORDER BY r.data_vencimento ASC";
+    if (cliente) {
+      query += " AND c.nome LIKE ?";
+      params.push(`%${cliente}%`);
+    }
 
-    db.all(query, params, (err, rows) => {
-      if (err) {
-        console.error('Erro ao buscar recebimentos:', err.message);
-        return reject([]);
-      } else {
-        const recebimentosFormatados = rows.map(recebimento => ({
-          ...recebimento,
-          data_vencimento: recebimento.data_vencimento ? new Date(recebimento.data_vencimento).toLocaleDateString('pt-BR') : '',
-          data_pagamento: recebimento.data_pagamento ? new Date(recebimento.data_pagamento).toLocaleDateString('pt-BR') : ''
-        }));
-        resolve(recebimentosFormatados);
-      }
-    });
-  });
+    query += " ORDER BY r.data_vencimento ASC";
+
+    db.all(query, params, (err, rows) => {
+      if (err) {
+        console.error('Erro ao buscar recebimentos:', err.message);
+        return reject(err); 
+      } else {
+        // Pega a data atual NO SERVIDOR e zera as horas para comparar apenas o dia
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+
+        const recebimentosFormatados = rows.map(recebimento => {
+          let statusParaExibicao = recebimento.status; // Começa com o status do banco
+
+          // Verifica se a conta deve ser considerada "atrasada"
+          // Aplicar apenas se o status atual for 'pendente' (ou outros que podem ficar atrasados)
+          // E se não estiver já 'pago' ou 'cancelado'
+          if (recebimento.data_vencimento && 
+              (statusParaExibicao === 'pendente')) { 
+            
+            // Converte a data de vencimento do formato YYYY-MM-DD (do banco) para um objeto Date
+            // Assegure-se que recebimento.data_vencimento é uma string 'YYYY-MM-DD'
+            const partesDataVencimento = recebimento.data_vencimento.split('-');
+            const anoVenc = parseInt(partesDataVencimento[0], 10);
+            const mesVenc = parseInt(partesDataVencimento[1], 10) - 1; // Mês no JS é 0-11
+            const diaVenc = parseInt(partesDataVencimento[2], 10);
+            
+            const dataVencimentoObj = new Date(anoVenc, mesVenc, diaVenc);
+            dataVencimentoObj.setHours(0, 0, 0, 0); // Zera horas para comparar apenas o dia
+
+            if (dataVencimentoObj < hoje) {
+              statusParaExibicao = 'atrasado';
+            }
+          }
+
+          return {
+            ...recebimento,
+            status: statusParaExibicao, // Usa o status ajustado para exibição
+            // Mantém o envio das datas originais (strings) para o frontend formatar
+            data_vencimento: recebimento.data_vencimento || null, 
+            data_pagamento: recebimento.data_pagamento || null 
+          };
+        });
+        resolve(recebimentosFormatados);
+      }
+    });
+  });
 });
 
 // Atualizar recebimento
-ipcMain.handle('atualizarStatusRecebimento', async (event, { recebimentoId, novoStatus, dataPagamento, formaPagamento }) => {
-  return new Promise((resolve, reject) => {
-    const query = `
-      UPDATE recebimentos
-      SET status = ?,
-          data_pagamento = ?,
-          forma_pagamento = ?
-      WHERE id = ?
-    `;
-    const dataPagamentoFormatada = dataPagamento ? new Date(dataPagamento).toISOString().split('T')[0] : null;
+ipcMain.handle('atualizarStatusRecebimento', async (event, dadosAtualizacao) => {
+  return new Promise((resolve, reject) => {
+    const {
+      recebimentoId,
+      novoStatus,
+      dataPagamento, // Já formatado como YYYY-MM-DD pelo frontend
+      formaPagamento,
+      novoValorPago   // Este é o valor que precisamos salvar
+    } = dadosAtualizacao;
 
-    db.run(query, [novoStatus, dataPagamentoFormatada, formaPagamento, recebimentoId], function (err) {
-      if (err) {
-        console.error('Erro ao atualizar o status do recebimento:', err.message);
-        return resolve({ success: false, message: 'Erro ao atualizar o status do recebimento.' });
-      }
-      resolve({ success: this.changes > 0, message: 'Status do recebimento atualizado com sucesso!' });
-    });
-  });
+    // Validações básicas (importante fazer no backend também)
+    if (!recebimentoId || !novoStatus) {
+      return reject({ success: false, message: 'ID do Recebimento e Novo Status são obrigatórios.' });
+    }
+
+    // ATENÇÃO: Obtenha o valor_total do banco para este recebimentoId
+    // Esta etapa é crucial para a lógica de status pendente/pago
+    db.get("SELECT valor_total FROM recebimentos WHERE id = ?", [recebimentoId], (err, row) => {
+      if (err) {
+        console.error('Erro ao buscar valor_total do recebimento:', err.message);
+        return reject({ success: false, message: 'Erro ao buscar dados do recebimento.' });
+      }
+      if (!row) {
+        return reject({ success: false, message: 'Recebimento não encontrado.' });
+      }
+
+      const valorTotalDoBanco = parseFloat(row.valor_total);
+      let statusFinalASalvar = novoStatus;
+      let valorPagoASalvar = novoValorPago; // Inicialmente usa o valor enviado
+
+      // --- Início da Lógica de Status e Valor Pago ---
+      if (novoStatus.toLowerCase() === 'pago') {
+        valorPagoASalvar = valorTotalDoBanco; // Garante que 'pago' significa valor total pago
+        if (!dataPagamento || !formaPagamento) {
+          // Se o frontend já validou, esta é uma dupla checagem.
+          // Pode ser mais flexível aqui ou manter a obrigatoriedade.
+          // return reject({ success: false, message: 'Para status "Pago", Data de Pagamento e Forma de Pagamento são obrigatórios.' });
+        }
+      } else if (novoStatus.toLowerCase() !== 'cancelado') { // Não se aplica a 'cancelado'
+        if (novoValorPago > 0 && novoValorPago < valorTotalDoBanco) {
+          statusFinalASalvar = 'pendente'; // Regra: pagamento parcial = pendente
+        } else if (novoValorPago >= valorTotalDoBanco) {
+          // Se pagou tudo mas o status enviado não foi 'pago' (ex: 'pendente' ou 'atrasado')
+          // Você pode decidir se força para 'pago' ou respeita o status enviado.
+          // Para respeitar: não faz nada aqui, statusFinalASalvar já é novoStatus.
+          // Para forçar para 'pago' se pagou tudo:
+          // statusFinalASalvar = 'pago';
+          // valorPagoASalvar = valorTotalDoBanco;
+          // E aqui também, dataPagamento e formaPagamento seriam idealmente necessários.
+        } else if (novoValorPago <= 0) {
+            // Se o valor pago é zero ou negativo, e o status não é 'pago' ou 'cancelado',
+            // o status enviado ('pendente', 'atrasado') é mantido.
+            valorPagoASalvar = 0; // Garante que não seja negativo
+        }
+      }
+      // --- Fim da Lógica de Status e Valor Pago ---
+
+      const query = `
+        UPDATE recebimentos
+        SET status = ?,
+            valor_pago = ?,      
+            data_pagamento = ?,
+            forma_pagamento = ?
+        WHERE id = ?
+      `;
+      const params = [
+        statusFinalASalvar,
+        valorPagoASalvar,    // Valor pago atualizado
+        dataPagamento,        // Deve ser YYYY-MM-DD ou NULL
+        formaPagamento,
+        recebimentoId
+      ];
+
+      db.run(query, params, function(err) { // Usar function() para ter acesso a this.changes
+        if (err) {
+          console.error('Erro ao atualizar recebimento:', err.message);
+          return reject({ success: false, message: 'Erro de banco de dados ao atualizar.' });
+        }
+        if (this.changes === 0) {
+          return reject({ success: false, message: 'Nenhum recebimento atualizado, ID pode não existir.' });
+        }
+        console.log(`Recebimento ID ${recebimentoId} atualizado com sucesso. Valor pago: ${valorPagoASalvar}, Status: ${statusFinalASalvar}`);
+        resolve({ success: true });
+      });
+    });
+  });
 });
 
 async function salvarPDF(caminhoArquivo, dadosPDF) {
@@ -543,7 +661,7 @@ ipcMain.handle('exportarParaPDF', async (event, htmlContent) => {
   const { dialog } = require('electron');
   const fs = require('fs');
   const path = require('path');
-  
+
   const { filePath } = await dialog.showSaveDialog({
     title: 'Salvar Relatório',
     defaultPath: path.join(app.getPath('desktop'), 'relatorio-vendas.pdf'),
@@ -555,7 +673,7 @@ ipcMain.handle('exportarParaPDF', async (event, htmlContent) => {
   // Usando webContents.printToPDF
   const win = new BrowserWindow({ show: false });
   await win.loadURL(`data:text/html,${encodeURIComponent(htmlContent)}`);
-  
+
   const pdfData = await win.webContents.printToPDF({
     printBackground: true,
     pageSize: 'A4',
@@ -564,13 +682,40 @@ ipcMain.handle('exportarParaPDF', async (event, htmlContent) => {
 
   fs.writeFileSync(filePath, pdfData);
   win.close();
-  
+
   return filePath;
 });
 
 // Quando o aplicativo Electron estiver pronto
 app.whenReady().then(() => {
   initializeDatabase(); // Garante que o banco seja inicializado APENAS UMA VEZ
+
+  // --- Código temporário para logar os dados das tabelas ---
+  db.all("SELECT * FROM recebimentos", (err, rows) => {
+    if (err) {
+      console.error("Erro ao consultar tabela recebimentos:", err.message);
+    } else {
+      console.log("➡️ Dados da tabela recebimentos:", rows);
+    }
+  });
+
+  db.all("SELECT * FROM vendas", (err, rows) => {
+    if (err) {
+      console.error("Erro ao consultar tabela vendas:", err.message);
+    } else {
+      console.log("➡️ Dados da tabela vendas:", rows);
+    }
+  });
+
+  db.all("SELECT * FROM clientes", (err, rows) => {
+    if (err) {
+      console.error("Erro ao consultar tabela clientes:", err.message);
+    } else {
+      console.log("➡️ Dados da tabela clientes:", rows);
+    }
+  });
+  // --- Fim do código temporário ---
+
   createWindow();
 
   app.on('activate', function () {
