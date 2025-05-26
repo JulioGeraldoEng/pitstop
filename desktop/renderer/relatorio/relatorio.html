@@ -32,6 +32,16 @@
         </div>
 
         <div class="campo">
+          <label for="statusVendaFiltro">Status Pag.:</label> <select id="statusVendaFiltro">
+            <option value="">Todos</option>
+            <option value="pendente">Pendentes</option>
+            <option value="pago">Pagos</option>
+            <option value="atrasado">Atrasados</option>
+            <option value="cancelado">Cancelados</option>
+          </select>
+        </div>
+
+        <div class="campo">
           <label for="dataInicio">Data Inicial:</label>
           <input type="text" id="dataInicio" placeholder="dd/mm/aaaa" maxlength="10">
         </div>
@@ -81,14 +91,14 @@
             <th>Data da Venda</th>
             <th>Vencimento</th>
             <th>Total</th>
+            <th>Status Pag.</th>
             <th>Produto</th>
             <th>Quantidade</th>
             <th>Preço Unitário</th>
           </tr>
         </thead>
         <tbody>
-
-        </tbody>
+          </tbody>
       </table>
     </div>
 

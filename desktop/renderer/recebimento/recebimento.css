@@ -127,6 +127,7 @@ button#novaVenda:hover {
     padding: 4px 6px;
     text-align: center;
     line-height: 1.2;
+    vertical-align: middle;
 }
 
 #tabela-contas-receber th {
@@ -183,6 +184,11 @@ button#novaVenda:hover {
 #tabela-contas-receber th:nth-child(10),
 #tabela-contas-receber td:nth-child(10) {
     width: 10%; /* Ações */
+}
+
+#tabela-contas-receber td:nth-child(10) button { /* Seletor para o botão dentro da 10ª célula TD */
+    margin-left: auto;
+    margin-right: auto;
 }
 
 /* Autocomplete (manter) */

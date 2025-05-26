@@ -151,48 +151,47 @@ button#recebimento:hover {
 }
 
 /* Larguras proporcionais */
+/* Em relatorio.css, para a .tabela-venda */
+
+/* Larguras proporcionais - AJUSTADAS PARA 10 COLUNAS */
 .tabela-venda th:nth-child(1),
 .tabela-venda td:nth-child(1) {
-  width: 5%; /* ID */
+  width: 5%; /* Venda ID */
 }
-
 .tabela-venda th:nth-child(2),
 .tabela-venda td:nth-child(2) {
-  width: 10%; /* Cliente */
+  width: 15%; /* Cliente (aumentado um pouco) */
 }
-
 .tabela-venda th:nth-child(3),
 .tabela-venda td:nth-child(3) {
-  width: 10%; /* Observação */
+  width: 13%; /* Observação (aumentado um pouco) */
 }
-
 .tabela-venda th:nth-child(4),
 .tabela-venda td:nth-child(4) {
   width: 10%; /* Data da Venda */
 }
-
 .tabela-venda th:nth-child(5),
 .tabela-venda td:nth-child(5) {
   width: 10%; /* Vencimento */
 }
-
 .tabela-venda th:nth-child(6),
 .tabela-venda td:nth-child(6) {
   width: 10%; /* Total */
 }
-
-.tabela-venda th:nth-child(7),
+.tabela-venda th:nth-child(7), /* NOVA COLUNA PARA STATUS */
 .tabela-venda td:nth-child(7) {
-  width: 10%; /* Produto */
+  width: 9%;  /* Status Pag. */
 }
-
-.tabela-venda th:nth-child(8),
+.tabela-venda th:nth-child(8), /* Era 7ª, agora 8ª */
 .tabela-venda td:nth-child(8) {
-  width: 5%; /* Quantidade */
+  width: 13%; /* Produto (aumentado um pouco) */
 }
-
-.tabela-venda th:nth-child(9),
+.tabela-venda th:nth-child(9), /* Era 8ª, agora 9ª */
 .tabela-venda td:nth-child(9) {
+  width: 5%;  /* Quantidade */
+}
+.tabela-venda th:nth-child(10), /* Era 9ª, agora 10ª */
+.tabela-venda td:nth-child(10) {
   width: 10%; /* Preço Unitário */
 }
 

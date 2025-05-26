@@ -15,7 +15,6 @@ if (!fs.existsSync(pastaDB)) {
 const dbExiste = fs.existsSync(dbPath);
 const db = new sqlite3.Database(dbPath);
 
-
 // Variável para armazenar a janela principal
 let mainWindow;
 
@@ -374,23 +373,25 @@ ipcMain.handle('registrar-venda', async (event, dadosVenda) => {
 // Buscar vendas e itens
 ipcMain.handle('buscarVendas', async (event, filtros) => {
     return new Promise((resolve, reject) => {
-        const { cliente, clienteId, dataInicio, dataFim, vencimentoInicio, vencimentoFim } = filtros;
+        const { cliente, clienteId, dataInicio, dataFim, vencimentoInicio, vencimentoFim, status } = filtros;
 
         let query = `
             SELECT
                 v.id AS venda_id,
                 c.nome AS cliente,
-                c.observacao,
+                c.observacao, 
                 v.data,
-                v.data_vencimento AS vencimento,
+                v.data_vencimento AS vencimento, 
                 v.total AS total_venda,
                 iv.id AS item_id,
                 iv.nome_produto,
                 iv.quantidade,
-                iv.preco_unitario
+                iv.preco_unitario,
+                r.status AS status_pagamento 
             FROM vendas v
             JOIN clientes c ON c.id = v.cliente_id
             LEFT JOIN itens_venda iv ON v.id = iv.venda_id
+            LEFT JOIN recebimentos r ON v.id = r.venda_id 
             WHERE 1 = 1
         `;
         const params = [];
@@ -403,80 +404,85 @@ ipcMain.handle('buscarVendas', async (event, filtros) => {
             params.push(`%${cliente}%`);
         }
 
-        const formatarData = (data) => {
-            if (!data || !/^\d{2}\/\d{2}\/\d{4}$/.test(data)) return null;
-            const [dia, mes, ano] = data.split('/');
+        const formatarDataParaDB = (dataString) => {
+            if (!dataString || !/^\d{2}\/\d{2}\/\d{4}$/.test(dataString)) return null;
+            const [dia, mes, ano] = dataString.split('/');
             return `${ano}-${mes}-${dia}`;
         };
 
-        if (dataInicio) {
+        const dataInicioFormatada = formatarDataParaDB(dataInicio);
+        if (dataInicioFormatada) {
             query += " AND DATE(v.data) >= DATE(?)";
-            params.push(formatarData(dataInicio));
+            params.push(dataInicioFormatada);
         }
 
-        if (dataFim) {
+        const dataFimFormatada = formatarDataParaDB(dataFim);
+        if (dataFimFormatada) {
             query += " AND DATE(v.data) <= DATE(?)";
-            params.push(formatarData(dataFim));
+            params.push(dataFimFormatada);
         }
 
-        if (vencimentoInicio) {
+        const vencimentoInicioFormatada = formatarDataParaDB(vencimentoInicio);
+        if (vencimentoInicioFormatada) {
             query += " AND DATE(v.data_vencimento) >= DATE(?)";
-            params.push(formatarData(vencimentoInicio));
+            params.push(vencimentoInicioFormatada);
         }
 
-        if (vencimentoFim) {
+        const vencimentoFimFormatada = formatarDataParaDB(vencimentoFim);
+        if (vencimentoFimFormatada) {
             query += " AND DATE(v.data_vencimento) <= DATE(?)";
-            params.push(formatarData(vencimentoFim));
+            params.push(vencimentoFimFormatada);
         }
 
-        query += " ORDER BY v.data DESC, v.id DESC";
+        // Filtro de Status
+        if (status) { // Se status for "" (string vazia de "Todos"), esta condição é falsa.
+          query += " AND r.status = ?";
+          params.push(status);
+        }
+
+        query += " ORDER BY v.data DESC, v.id DESC, iv.id ASC";
+
+        console.log("BACKEND - Query buscarVendas:", query);
+        console.log("BACKEND - Params buscarVendas:", params);
 
         db.all(query, params, (err, rows) => {
             if (err) {
-                console.error('Erro ao buscar vendas e itens:', err.message);
-                return reject([]);
-            } else {
-                const vendasDetalhadas = rows.reduce((acc, row) => {
-                    const vendaExistente = acc.find(v => v.venda_id === row.venda_id);
-                    const item = row.item_id ? {
+                console.error('BACKEND - Erro na query buscarVendas:', err.message);
+                return reject(err); 
+            }
+            // console.log("BACKEND - Rows do DB (buscarVendas):", JSON.stringify(rows, null, 2)); 
+
+            const vendasMap = new Map();
+            rows.forEach(row => {
+                if (!vendasMap.has(row.venda_id)) {
+                    vendasMap.set(row.venda_id, {
+                        venda_id: row.venda_id,
+                        cliente: row.cliente,
+                        observacao: row.observacao,
+                        data: row.data, 
+                        vencimento: row.vencimento, 
+                        total_venda: row.total_venda,
+                        status_pagamento: row.status_pagamento || 'N/A', 
+                        itens: []
+                    });
+                }
+                if (row.item_id) {
+                    vendasMap.get(row.venda_id).itens.push({
                         id: row.item_id,
                         nome_produto: row.nome_produto,
                         quantidade: row.quantidade,
                         preco_unitario: row.preco_unitario
-                    } : null;
-
-                    if (vendaExistente) {
-                        if (item) {
-                            vendaExistente.itens.push(item);
-                        }
-                    } else {
-                        acc.push({
-                            venda_id: row.venda_id,
-                            cliente: row.cliente,
-                            observacao: row.observacao,
-                            data: row.data,
-                            vencimento: row.vencimento,
-                            total_venda: row.total_venda,
-                            itens: item ? [item] : []
-                        });
-                    }
-                    return acc;
-                }, []);
-
-                const vendasFormatadas = vendasDetalhadas.map(venda => ({
-                    ...venda,
-                    data: venda.data ? new Date(venda.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '-',
-                    vencimento: venda.vencimento ? new Date(venda.vencimento).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '-'
-                }));
-
-                resolve(vendasFormatadas);
-            }
+                    });
+                }
+            });
+            const vendasProcessadas = Array.from(vendasMap.values());
+            // console.log("BACKEND - Vendas Processadas para Frontend:", JSON.stringify(vendasProcessadas, null, 2));
+            resolve(vendasProcessadas);
         });
     });
 });
 
 // Buscar registros de recebimentos
-// No seu arquivo de backend do Electron (ex: main.js ou onde está o ipcMain)
 ipcMain.handle('buscarRecebimentos', async (event, filtros) => {
   return new Promise((resolve, reject) => {
     const { status, cliente } = filtros;
