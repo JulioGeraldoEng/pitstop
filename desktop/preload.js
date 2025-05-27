@@ -28,4 +28,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   buscarRecebimentos: (filtros) => ipcRenderer.invoke('buscarRecebimentos', filtros),
   atualizarStatusRecebimento: (data) => ipcRenderer.invoke('atualizarStatusRecebimento', data),
 
+  // Configurações
+  lerArquivoBase64: (caminhoRelativo) => ipcRenderer.invoke('ler-arquivo-base64', caminhoRelativo),
+  sincronizarStatusAtrasadosBanco: () => ipcRenderer.invoke('sincronizar-status-atrasados-banco'),
 });

@@ -372,184 +372,212 @@ ipcMain.handle('registrar-venda', async (event, dadosVenda) => {
 
 // Buscar vendas e itens
 ipcMain.handle('buscarVendas', async (event, filtros) => {
-    return new Promise((resolve, reject) => {
-        const { cliente, clienteId, dataInicio, dataFim, vencimentoInicio, vencimentoFim, status } = filtros;
+  return new Promise((resolve, reject) => {
+    const { cliente, clienteId, dataInicio, dataFim, vencimentoInicio, vencimentoFim, status: statusFiltro } = filtros;
 
-        let query = `
-            SELECT
-                v.id AS venda_id,
-                c.nome AS cliente,
-                c.observacao, 
-                v.data,
-                v.data_vencimento AS vencimento, 
-                v.total AS total_venda,
-                iv.id AS item_id,
-                iv.nome_produto,
-                iv.quantidade,
-                iv.preco_unitario,
-                r.status AS status_pagamento 
-            FROM vendas v
-            JOIN clientes c ON c.id = v.cliente_id
-            LEFT JOIN itens_venda iv ON v.id = iv.venda_id
-            LEFT JOIN recebimentos r ON v.id = r.venda_id 
-            WHERE 1 = 1
-        `;
-        const params = [];
+    let query = `
+      SELECT
+          v.id AS venda_id,
+          c.nome AS cliente,
+          c.observacao, 
+          v.data,
+          v.data_vencimento,      -- Usaremos esta para a lógica de atraso
+          v.total AS total_venda,
+          iv.id AS item_id,
+          iv.nome_produto,
+          iv.quantidade,
+          iv.preco_unitario,
+          r.status AS status_armazenado_db -- Status original do recebimento
+      FROM vendas v
+      JOIN clientes c ON c.id = v.cliente_id
+      LEFT JOIN itens_venda iv ON v.id = iv.venda_id
+      LEFT JOIN recebimentos r ON v.id = r.venda_id 
+      WHERE 1 = 1
+    `;
+    const params = [];
 
-        if (clienteId) {
-            query += " AND c.id = ?";
-            params.push(clienteId);
-        } else if (cliente) {
-            query += " AND c.nome LIKE ?";
-            params.push(`%${cliente}%`);
+    // Seus filtros de cliente e data (mantidos como na sua versão corrigida)
+    if (clienteId) { query += " AND c.id = ?"; params.push(clienteId); }
+    else if (cliente) { query += " AND c.nome LIKE ?"; params.push(`%${cliente}%`); }
+
+    const formatarDataParaDB = (dataString) => {
+        if (!dataString || !/^\d{2}\/\d{2}\/\d{4}$/.test(dataString)) return null;
+        const [dia, mes, ano] = dataString.split('/');
+        return `${ano}-${mes}-${dia}`;
+    };
+
+    const dataInicioFormatada = formatarDataParaDB(dataInicio);
+    if (dataInicioFormatada) { query += " AND DATE(v.data) >= DATE(?)"; params.push(dataInicioFormatada); }
+    const dataFimFormatada = formatarDataParaDB(dataFim);
+    if (dataFimFormatada) { query += " AND DATE(v.data) <= DATE(?)"; params.push(dataFimFormatada); }
+    const vencimentoInicioFormatada = formatarDataParaDB(vencimentoInicio);
+    if (vencimentoInicioFormatada) { query += " AND DATE(v.data_vencimento) >= DATE(?)"; params.push(vencimentoInicioFormatada); }
+    const vencimentoFimFormatada = formatarDataParaDB(vencimentoFim);
+    if (vencimentoFimFormatada) { query += " AND DATE(v.data_vencimento) <= DATE(?)"; params.push(vencimentoFimFormatada); }
+
+    // --- Filtro de Status CORRIGIDO e AJUSTADO ---
+        if (statusFiltro && statusFiltro !== "") { // Se um status específico foi selecionado
+            const statusLower = statusFiltro.toLowerCase();
+
+        if (statusLower === 'atrasado') {
+            // Para o filtro "atrasado":
+            // 1. Status no banco é 'pendente' E a data de vencimento da VENDA já passou
+            // OU
+            // 2. Status no banco já é 'atrasado'
+            query += ` AND (
+                            (LOWER(r.status) = 'pendente' AND DATE(v.data_vencimento) < DATE('now', 'localtime')) 
+                            OR 
+                            LOWER(r.status) = 'atrasado'
+                            )`;
+        } else if (statusLower === 'pendente') {
+            // Para 'pendente', busca 'pendente' que AINDA NÃO ESTÃO VENCIDOS
+            query += ` AND LOWER(r.status) = 'pendente' AND DATE(v.data_vencimento) >= DATE('now', 'localtime')`;
+        } else {
+            // Para outros status ('pago', 'cancelado')
+            query += " AND LOWER(r.status) = LOWER(?)";
+            params.push(statusLower);
+        }
+    }
+    // --- Fim do Filtro de Status CORRIGIDO ---
+    
+    query += " ORDER BY v.data DESC, v.id DESC, iv.id ASC";
+
+    // console.log("BACKEND - Query buscarVendas:", query);
+    // console.log("BACKEND - Params buscarVendas:", params);
+
+    db.all(query, params, (err, rows) => {
+      if (err) {
+        console.error('BACKEND - Erro na query buscarVendas:', err.message);
+        return reject(err); 
+      }
+      // console.log("BACKEND - Rows do DB (buscarVendas):", JSON.stringify(rows, null, 2)); 
+
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+
+      const vendasMap = new Map();
+      rows.forEach(row => {
+        let statusParaExibicao = row.status_armazenado_db; // Status como está no banco
+
+        // Deriva o status "atrasado" para exibição SEMPRE
+        if (row.data_vencimento && statusParaExibicao && statusParaExibicao.toLowerCase() === 'pendente') {
+          const partesDataVenc = row.data_vencimento.split('-');
+          const dataVencimentoObj = new Date(
+            parseInt(partesDataVenc[0], 10),
+            parseInt(partesDataVenc[1], 10) - 1, 
+            parseInt(partesDataVenc[2], 10)
+          );
+          dataVencimentoObj.setHours(0, 0, 0, 0);
+          if (dataVencimentoObj < hoje) {
+            statusParaExibicao = 'atrasado';
+          }
         }
 
-        const formatarDataParaDB = (dataString) => {
-            if (!dataString || !/^\d{2}\/\d{2}\/\d{4}$/.test(dataString)) return null;
-            const [dia, mes, ano] = dataString.split('/');
-            return `${ano}-${mes}-${dia}`;
-        };
-
-        const dataInicioFormatada = formatarDataParaDB(dataInicio);
-        if (dataInicioFormatada) {
-            query += " AND DATE(v.data) >= DATE(?)";
-            params.push(dataInicioFormatada);
+        if (!vendasMap.has(row.venda_id)) {
+          vendasMap.set(row.venda_id, {
+            venda_id: row.venda_id,
+            cliente: row.cliente,
+            observacao: row.observacao,
+            data: row.data, 
+            vencimento: row.data_vencimento, // Envia a data de vencimento original da VENDA
+            total_venda: row.total_venda,
+            status_pagamento: statusParaExibicao || 'N/A', // Usa o status DERIVADO
+            itens: []
+          });
         }
-
-        const dataFimFormatada = formatarDataParaDB(dataFim);
-        if (dataFimFormatada) {
-            query += " AND DATE(v.data) <= DATE(?)";
-            params.push(dataFimFormatada);
+        if (row.item_id) {
+          vendasMap.get(row.venda_id).itens.push({
+            id: row.item_id,
+            nome_produto: row.nome_produto,
+            quantidade: row.quantidade,
+            preco_unitario: row.preco_unitario
+          });
         }
-
-        const vencimentoInicioFormatada = formatarDataParaDB(vencimentoInicio);
-        if (vencimentoInicioFormatada) {
-            query += " AND DATE(v.data_vencimento) >= DATE(?)";
-            params.push(vencimentoInicioFormatada);
-        }
-
-        const vencimentoFimFormatada = formatarDataParaDB(vencimentoFim);
-        if (vencimentoFimFormatada) {
-            query += " AND DATE(v.data_vencimento) <= DATE(?)";
-            params.push(vencimentoFimFormatada);
-        }
-
-        // Filtro de Status
-        if (status) { // Se status for "" (string vazia de "Todos"), esta condição é falsa.
-          query += " AND r.status = ?";
-          params.push(status);
-        }
-
-        query += " ORDER BY v.data DESC, v.id DESC, iv.id ASC";
-
-        console.log("BACKEND - Query buscarVendas:", query);
-        console.log("BACKEND - Params buscarVendas:", params);
-
-        db.all(query, params, (err, rows) => {
-            if (err) {
-                console.error('BACKEND - Erro na query buscarVendas:', err.message);
-                return reject(err); 
-            }
-            // console.log("BACKEND - Rows do DB (buscarVendas):", JSON.stringify(rows, null, 2)); 
-
-            const vendasMap = new Map();
-            rows.forEach(row => {
-                if (!vendasMap.has(row.venda_id)) {
-                    vendasMap.set(row.venda_id, {
-                        venda_id: row.venda_id,
-                        cliente: row.cliente,
-                        observacao: row.observacao,
-                        data: row.data, 
-                        vencimento: row.vencimento, 
-                        total_venda: row.total_venda,
-                        status_pagamento: row.status_pagamento || 'N/A', 
-                        itens: []
-                    });
-                }
-                if (row.item_id) {
-                    vendasMap.get(row.venda_id).itens.push({
-                        id: row.item_id,
-                        nome_produto: row.nome_produto,
-                        quantidade: row.quantidade,
-                        preco_unitario: row.preco_unitario
-                    });
-                }
-            });
-            const vendasProcessadas = Array.from(vendasMap.values());
-            // console.log("BACKEND - Vendas Processadas para Frontend:", JSON.stringify(vendasProcessadas, null, 2));
-            resolve(vendasProcessadas);
-        });
+      });
+      const vendasProcessadas = Array.from(vendasMap.values());
+      // console.log("BACKEND - Vendas Processadas para Frontend:", JSON.stringify(vendasProcessadas, null, 2));
+      resolve(vendasProcessadas);
     });
+  });
 });
 
 // Buscar registros de recebimentos
 ipcMain.handle('buscarRecebimentos', async (event, filtros) => {
   return new Promise((resolve, reject) => {
-    const { status, cliente } = filtros;
+    const { status: statusFiltro, cliente } = filtros;
+
     let query = `
-      SELECT r.id, v.id as venda_id, c.nome as cliente, r.data_vencimento, r.valor_total, r.valor_pago, r.data_pagamento, r.status, r.forma_pagamento
+      SELECT r.id, v.id as venda_id, c.nome as cliente, 
+             r.data_vencimento,  -- Usado para lógica de 'atrasado'
+             r.valor_total, r.valor_pago, r.data_pagamento, 
+             r.status as status_armazenado_db, -- Status original do banco
+             r.forma_pagamento
       FROM recebimentos r
-      JOIN vendas v ON v.id = r.venda_id
-      JOIN clientes c ON c.id = v.cliente_id
+      JOIN vendas v ON v.id = r.venda_id       -- Join com vendas
+      JOIN clientes c ON c.id = v.cliente_id -- Join com clientes a partir de vendas
       WHERE 1 = 1
     `;
     const params = [];
-
-    if (status) {
-      query += " AND r.status = ?";
-      params.push(status);
-    }
 
     if (cliente) {
       query += " AND c.nome LIKE ?";
       params.push(`%${cliente}%`);
     }
 
+    // --- Filtro de Status CORRIGIDO e AJUSTADO ---
+    if (statusFiltro && statusFiltro !== "") {
+        const statusLower = statusFiltro.toLowerCase();
+        if (statusLower === 'atrasado') {
+            query += ` AND (
+                            (LOWER(r.status) = 'pendente' AND DATE(r.data_vencimento) < DATE('now', 'localtime')) 
+                            OR 
+                            LOWER(r.status) = 'atrasado'
+                           )`;
+        } else if (statusLower === 'pendente') {
+            query += ` AND LOWER(r.status) = 'pendente' AND DATE(r.data_vencimento) >= DATE('now', 'localtime')`;
+        } else {
+            query += " AND LOWER(r.status) = LOWER(?)";
+            params.push(statusLower);
+        }
+    }
+    // --- Fim do Filtro de Status CORRIGIDO ---
+
     query += " ORDER BY r.data_vencimento ASC";
+    // console.log("Query buscarRecebimentos:", query, "Params:", params);
 
     db.all(query, params, (err, rows) => {
-      if (err) {
+      if (err) { 
         console.error('Erro ao buscar recebimentos:', err.message);
         return reject(err); 
-      } else {
-        // Pega a data atual NO SERVIDOR e zera as horas para comparar apenas o dia
-        const hoje = new Date();
-        hoje.setHours(0, 0, 0, 0);
-
-        const recebimentosFormatados = rows.map(recebimento => {
-          let statusParaExibicao = recebimento.status; // Começa com o status do banco
-
-          // Verifica se a conta deve ser considerada "atrasada"
-          // Aplicar apenas se o status atual for 'pendente' (ou outros que podem ficar atrasados)
-          // E se não estiver já 'pago' ou 'cancelado'
-          if (recebimento.data_vencimento && 
-              (statusParaExibicao === 'pendente')) { 
-            
-            // Converte a data de vencimento do formato YYYY-MM-DD (do banco) para um objeto Date
-            // Assegure-se que recebimento.data_vencimento é uma string 'YYYY-MM-DD'
-            const partesDataVencimento = recebimento.data_vencimento.split('-');
-            const anoVenc = parseInt(partesDataVencimento[0], 10);
-            const mesVenc = parseInt(partesDataVencimento[1], 10) - 1; // Mês no JS é 0-11
-            const diaVenc = parseInt(partesDataVencimento[2], 10);
-            
-            const dataVencimentoObj = new Date(anoVenc, mesVenc, diaVenc);
-            dataVencimentoObj.setHours(0, 0, 0, 0); // Zera horas para comparar apenas o dia
-
-            if (dataVencimentoObj < hoje) {
-              statusParaExibicao = 'atrasado';
-            }
-          }
-
-          return {
-            ...recebimento,
-            status: statusParaExibicao, // Usa o status ajustado para exibição
-            // Mantém o envio das datas originais (strings) para o frontend formatar
-            data_vencimento: recebimento.data_vencimento || null, 
-            data_pagamento: recebimento.data_pagamento || null 
-          };
-        });
-        resolve(recebimentosFormatados);
       }
+      
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+
+      const recebimentosProcessados = rows.map(recebimento => {
+        let statusParaExibicao = recebimento.status_armazenado_db;
+
+        if (recebimento.data_vencimento && statusParaExibicao && statusParaExibicao.toLowerCase() === 'pendente') {
+          const partesDataVenc = recebimento.data_vencimento.split('-');
+          const dataVencimentoObj = new Date(
+            parseInt(partesDataVenc[0], 10), 
+            parseInt(partesDataVenc[1], 10) - 1, 
+            parseInt(partesDataVenc[2], 10)
+          );
+          dataVencimentoObj.setHours(0,0,0,0);
+          if (dataVencimentoObj < hoje) {
+            statusParaExibicao = 'atrasado';
+          }
+        }
+        return {
+          ...recebimento, // Retorna todos os campos originais da linha do DB
+          status: statusParaExibicao, // Sobrescreve o campo 'status' com o valor derivado
+          // Assegura que as datas originais sejam enviadas para o frontend formatar
+          data_vencimento: recebimento.data_vencimento || null,
+          data_pagamento: recebimento.data_pagamento || null
+        };
+      });
+      resolve(recebimentosProcessados);
     });
   });
 });
@@ -643,6 +671,49 @@ ipcMain.handle('atualizarStatusRecebimento', async (event, dadosAtualizacao) => 
   });
 });
 
+// sincronizar status atrasados via IPC
+ipcMain.handle('sincronizar-status-atrasados-banco', async () => {
+  try {
+    const resultado = await atualizarStatusParaAtrasadoNoBanco();
+    return resultado;
+  } catch (error) {
+    console.error("Falha ao sincronizar status atrasados via IPC:", error);
+    return { success: false, message: error.message || "Erro desconhecido na sincronização." };
+  }
+});
+
+// função para atualizar status de recebimentos atrasados
+async function atualizarStatusParaAtrasadoNoBanco() {
+  return new Promise((resolve, reject) => {
+    // Pega a data atual e formata para YYYY-MM-DD para comparação com SQLite
+    // DATE('now', 'localtime') já faz isso no SQL, mas ter a string pode ser útil
+    // ou podemos confiar diretamente na função DATE do SQLite.
+    // Para a query, vamos usar DATE('now', 'localtime') do SQLite.
+
+    const query = `
+      UPDATE recebimentos
+      SET status = 'atrasado'
+      WHERE 
+        LOWER(status) = 'pendente' 
+        AND DATE(data_vencimento) < DATE('now', 'localtime') 
+    `;
+    // DATE(data_vencimento) < DATE('now', 'localtime')
+    //   -> Compara a data de vencimento (que deve estar como YYYY-MM-DD)
+    //   -> com a data atual no fuso horário do servidor.
+
+    db.run(query, [], function(err) { // Não precisamos de parâmetros aqui
+      if (err) {
+        console.error("Erro ao tentar atualizar status para 'atrasado' no banco:", err.message);
+        return reject({ success: false, message: `Erro no banco: ${err.message}` });
+      }
+      if (this.changes > 0) {
+        console.log(`[AUTO-STATUS] ${this.changes} registro(s) de recebimento foram atualizados para 'atrasado' no banco.`);
+      }
+      resolve({ success: true, changes: this.changes || 0 });
+    });
+  });
+}
+
 async function salvarPDF(caminhoArquivo, dadosPDF) {
   try {
     const diretorio = path.dirname(caminhoArquivo);
@@ -663,6 +734,7 @@ async function salvarPDF(caminhoArquivo, dadosPDF) {
   }
 }
 
+// Exportar para PDF
 ipcMain.handle('exportarParaPDF', async (event, htmlContent) => {
   const { dialog } = require('electron');
   const fs = require('fs');
@@ -692,35 +764,46 @@ ipcMain.handle('exportarParaPDF', async (event, htmlContent) => {
   return filePath;
 });
 
+// NOVO HANDLER PARA LER O ARQUIVO BASE64
+ipcMain.handle('ler-arquivo-base64', async (event, caminhoRelativoDoArquivo) => {
+  try {
+    // app.getAppPath() retorna o diretório raiz da sua aplicação
+    // (onde está o package.json, ou a raiz do app.asar se estiver empacotado)
+    const caminhoAbsoluto = path.join(app.getAppPath(), caminhoRelativoDoArquivo);
+
+    if (fs.existsSync(caminhoAbsoluto)) {
+      const conteudoBase64Puro = fs.readFileSync(caminhoAbsoluto, 'utf8');
+      // Assumindo que seu arquivo .b64 contém APENAS a string da imagem, sem o prefixo.
+      // Adicionamos o prefixo necessário para Data URI.
+      return `data:image/png;base64,${conteudoBase64Puro.trim()}`;
+    } else {
+      console.error(`Arquivo Base64 não encontrado em: ${caminhoAbsoluto}`);
+      return null; // Ou lançar um erro que o frontend pode tratar
+    }
+  } catch (error) {
+    console.error('Erro ao ler arquivo Base64 do sistema:', error);
+    throw error; // Propaga o erro para o renderer para ser pego no catch
+  }
+});
+
 // Quando o aplicativo Electron estiver pronto
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   initializeDatabase(); // Garante que o banco seja inicializado APENAS UMA VEZ
 
-  // --- Código temporário para logar os dados das tabelas ---
-  db.all("SELECT * FROM recebimentos", (err, rows) => {
-    if (err) {
-      console.error("Erro ao consultar tabela recebimentos:", err.message);
-    } else {
-      console.log("➡️ Dados da tabela recebimentos:", rows);
+  // Adicione a chamada para atualizar os status aqui
+  try {
+    console.log("[APP INIT] Verificando e atualizando status de recebimentos vencidos...");
+    const resultadoAtualizacao = await atualizarStatusParaAtrasadoNoBanco();
+    if (resultadoAtualizacao.success) {
+      if (resultadoAtualizacao.changes > 0) {
+        console.log(`[APP INIT] ${resultadoAtualizacao.changes} status foram atualizados para 'atrasado'.`);
+      } else {
+        console.log("[APP INIT] Nenhum status precisou ser atualizado para 'atrasado'.");
+      }
     }
-  });
-
-  db.all("SELECT * FROM vendas", (err, rows) => {
-    if (err) {
-      console.error("Erro ao consultar tabela vendas:", err.message);
-    } else {
-      console.log("➡️ Dados da tabela vendas:", rows);
-    }
-  });
-
-  db.all("SELECT * FROM clientes", (err, rows) => {
-    if (err) {
-      console.error("Erro ao consultar tabela clientes:", err.message);
-    } else {
-      console.log("➡️ Dados da tabela clientes:", rows);
-    }
-  });
-  // --- Fim do código temporário ---
+  } catch (error) {
+    console.error("[APP INIT] Falha ao tentar atualizar status vencidos na inicialização:", error);
+  }
 
   createWindow();
 
