@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
@@ -204,9 +204,6 @@ ipcMain.handle('excluir-cliente', async (event, id) => {
   });
 });
 
-
-
-
 // Produtos
 ipcMain.handle('buscar-produtos-por-nome', async (event, termo) => {
   return new Promise((resolve, reject) => {
@@ -379,6 +376,7 @@ ipcMain.handle('buscarVendas', async (event, filtros) => {
       SELECT
           v.id AS venda_id,
           c.nome AS cliente,
+          c.telefone AS telefone,
           c.observacao, 
           v.data,
           v.data_vencimento,      -- Usaremos esta para a lógica de atraso
@@ -477,6 +475,7 @@ ipcMain.handle('buscarVendas', async (event, filtros) => {
           vendasMap.set(row.venda_id, {
             venda_id: row.venda_id,
             cliente: row.cliente,
+            telefone: row.telefone,
             observacao: row.observacao,
             data: row.data, 
             vencimento: row.data_vencimento, // Envia a data de vencimento original da VENDA

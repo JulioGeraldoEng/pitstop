@@ -101,6 +101,13 @@ button#recebimento:hover {
   background-color: #00b89c;
 }
 
+button#btnCompartilharWhatsApp {
+  background-color: #25D366;
+}
+
+button#btnCompartilharWhatsApp:hover {
+  background-color: #1ebe5e;
+}
 
 /* Formulário */
 .formulario {
