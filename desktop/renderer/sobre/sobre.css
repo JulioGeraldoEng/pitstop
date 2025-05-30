@@ -1,0 +1,59 @@
+/* Estilos para os itens expansíveis */
+.feature-toggle {
+    font-weight: bold;
+    cursor: pointer;
+    padding: 8px 0;
+    display: block; /* Faz o <li> se comportar mais como um botão */
+    position: relative;
+    user-select: none; /* Impede seleção de texto ao clicar */
+}
+
+.feature-toggle::before {
+    content: '+ '; /* Indicador de expansão */
+    margin-right: 8px;
+    font-weight: bold;
+}
+
+.feature-toggle.open::before {
+    content: '- '; /* Indicador quando aberto */
+}
+
+.feature-details {
+    display: none; /* Escondido por padrão */
+    padding-left: 25px; /* Indentação para os detalhes */
+    margin-bottom: 15px;
+    border-left: 2px solid #e0e0e0; /* Linha lateral para destacar */
+    background-color: #f9f9f9; /* Fundo levemente diferente */
+    padding: 10px 10px 10px 25px; /* Mais padding interno */
+    font-weight: normal; /* Resetar bold se herdado */
+}
+
+.feature-details p, .feature-details ul {
+    margin-top: 5px;
+    margin-bottom: 10px;
+}
+.feature-details ul li {
+    margin-bottom: 3px;
+}
+.feature-details strong { /* Para destacar os nomes dos campos */
+    color: #005fa3; /* Um azul similar ao que você usa */
+}
+
+.lista-features-sobre {
+    text-align: left;
+    list-style-position: inside; /* Para os marcadores ficarem dentro da área de texto alinhada */
+    padding-left: 0; /* Remove o padding padrão para controlar melhor o alinhamento */
+    list-style-type: none; /* Remove os marcadores padrão */
+}
+
+.lista-features-sobre > li {
+    /* Se você tiver algum estilo que possa estar centralizando o li individualmente */
+    text-align: left;
+}
+
+.feature-toggle {
+    /* ... seus outros estilos para .feature-toggle ... */
+    /* display: inline-block; */ /* Pode não ser necessário se o li já está alinhado à esquerda */
+    /* width: auto; */
+    text-align: left; /* Garante que o texto dentro do span não seja centralizado */
+}

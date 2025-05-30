@@ -105,6 +105,7 @@ button#novaVenda:hover {
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow-x: auto; /* <<< ADD THIS LINE HERE */
 }
 
 /* Remove a margem superior do título dentro da tabela de relatório */
@@ -245,8 +246,11 @@ button#novaVenda:hover {
         margin-top: 10px;
     }
 
+    /* You can potentially remove this if the global overflow-x handles it,
+       but it doesn't hurt to keep it for explicitness or if other
+       responsive adjustments for the table container are needed here. */
     #tabela-recebimentos {
-        overflow-x: auto; /* Adiciona barra de rolagem horizontal em telas menores */
+        overflow-x: auto; /* This was moved to the main rule */
     }
 }
 

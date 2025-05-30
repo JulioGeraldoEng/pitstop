@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, Menu, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
@@ -15,8 +15,11 @@ if (!fs.existsSync(pastaDB)) {
 const dbExiste = fs.existsSync(dbPath);
 const db = new sqlite3.Database(dbPath);
 
+const cssFilePath = path.join(__dirname, 'renderer', 'assets', 'css', 'styles.css');
+
 // Variável para armazenar a janela principal
 let mainWindow;
+let aboutWindow = null; // Janela "Sobre"
 
 // Função de inicialização do banco de dados (chamada apenas uma vez)
 function initializeDatabase() {
@@ -101,7 +104,6 @@ function createWindow() {
     mainWindow = null;
   });
 }
-
 
 // ===========================================================================
 // IPC Main Handlers - REGISTRAR APENAS UMA VEZ AO INICIAR O APP
@@ -806,10 +808,205 @@ app.whenReady().then(async () => {
 
   createWindow();
 
+  const menuTemplate = [
+  {
+    label: 'Arquivo', // Nome do menu principal
+    submenu: [
+      {
+        label: 'Abrir Ferramenta X',
+        click: async () => {
+          // Lógica para abrir uma nova janela ou executar uma ação
+          console.log('Abrir Ferramenta X clicado!');
+          // Exemplo: criar uma nova janela
+          // const newWindow = new BrowserWindow({ width: 600, height: 400 });
+          // newWindow.loadFile('caminho/para/ferramenta_x.html');
+        }
+      },
+      {
+        label: 'Configurações',
+        click: () => {
+          console.log('Configurações clicado!');
+          // Lógica para abrir a janela de configurações
+        }
+      },
+      { type: 'separator' }, // Adiciona uma linha separadora
+      {
+        label: 'Sair',
+        accelerator: process.platform === 'darwin' ? 'Cmd+Q' : 'Alt+F4', // Atalho
+        click: () => {
+          app.quit(); // Fecha a aplicação
+        }
+        // Você também pode usar 'role' para comportamentos padrão:
+        // role: 'quit'
+      }
+    ]
+  },
+  {
+    label: 'Sobre o Pitstop',
+    click: () => {
+      // Se a janela "Sobre" já estiver aberta, foque nela
+      if (aboutWindow) {
+        aboutWindow.focus();
+        return;
+      }
+
+      // Criar uma nova janela para o "Sobre"
+      aboutWindow = new BrowserWindow({
+        width: 500, // Largura da janela "Sobre"
+        height: 450, // Altura da janela "Sobre"
+        title: 'Sobre o Pitstop', // Título da janela
+        icon: path.join(__dirname, 'renderer', 'assets', 'icon', 'pitstop_icon.ico'),
+        // parent: mainWindow, // Descomente se quiser que seja filha da janela principal
+        // modal: true,       // Descomente se quiser que seja modal (bloqueia interação com a parente)
+        resizable: false,    // Impede redimensionamento
+        minimizable: false,  // Impede minimização (opcional)
+        maximizable: false,  // Impede maximização (opcional)
+        // autoHideMenuBar: true, // Oculta a barra de menu (comum para janelas "Sobre")
+        webPreferences: {
+          nodeIntegration: false, // Mantenha false por segurança
+          contextIsolation: true, // Mantenha true por segurança
+          // preload: path.join(__dirname, 'about-preload.js') // Se precisar de um preload específico
+        }
+      });
+
+      // Carrega o arquivo sobre.html na nova janela
+      // Certifique-se que o caminho para 'sobre.html' está correto
+      aboutWindow.loadFile(path.join(__dirname, 'renderer', 'sobre', 'sobre.html'));
+      // Se 'sobre.html' estiver em uma pasta 'assets':
+      // aboutWindow.loadFile(path.join(__dirname, 'assets', 'sobre.html'));
+
+      // Opcional: Remover o menu da janela "Sobre"
+      aboutWindow.setMenu(null);
+
+      // Limpa a referência da janela quando ela for fechada
+      aboutWindow.on('closed', () => {
+        aboutWindow = null;
+      });
+    }
+  },
+  // Adicione mais menus como 'Editar', 'Visualizar' conforme necessário
+  // Exemplo de um menu 'Editar' com roles comuns:
+  
+  {
+    label: 'Visualizar',
+    submenu: [
+      { type: 'separator' },
+      { role: 'reload', label: 'Recarregar Janela' },
+      { role: 'forceReload', label: 'Forçar Recarregamento da Janela' },
+      { role: 'toggleDevTools', label: 'Ferramentas do Desenvolvedor' },
+      { type: 'separator' },
+      { role: 'resetZoom', label: 'Restaurar Zoom' },
+      { role: 'zoomIn', label: 'Aumentar Zoom' },
+      { role: 'zoomOut', label: 'Diminuir Zoom' },
+      { type: 'separator' },
+      { role: 'togglefullscreen', label: 'Tela Cheia' }
+    ]
+  },
+  {
+      label: 'Mudar Cor', // Mantendo sua estrutura
+      submenu: [
+        // Novas opções para mudar a cor do body:
+        {
+          label: 'Fundo Vermelho Claro',
+          click: () => {
+            updateCssBackgroundColor('rgb(255, 182, 193)'); // Cor exemplo
+          }
+        },
+        {
+          label: 'Fundo Amarelo Claro',
+          click: () => {
+            updateCssBackgroundColor('rgb(238, 238, 142)');
+          }
+        },
+        {
+          label: 'Fundo Verde Claro',
+          click: () => {
+            updateCssBackgroundColor('rgb(152, 251, 152)');
+          }
+        },
+        {
+          label: 'Fundo Azul Claro',
+          click: () => {
+            updateCssBackgroundColor('rgb(173, 216, 230)');
+          }
+        }
+      ]
+    }
+];
+  
+  const menu = Menu.buildFromTemplate(menuTemplate);
+  Menu.setApplicationMenu(menu);
+
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
+
+// Função para atualizar o CSS e notificar o renderer
+function updateCssBackgroundColor(newColor) {
+  if (!mainWindow) {
+    console.error('Janela principal não encontrada.');
+    return;
+  }
+
+  // 1. Atualização visual imediata na janela (renderer)
+  mainWindow.webContents.send('change-body-color', newColor);
+
+  // 2. Modificar e salvar o arquivo CSS
+  try {
+    let originalCssContent = fs.readFileSync(cssFilePath, 'utf8');
+    let modifiedCssContent = originalCssContent;
+    let changesMade = false;
+
+    const bodyRuleRegex = /(body\s*\{)([\s\S]*?)(\})/i; // Regex para encontrar a regra 'body { ... }'
+    let bodyRuleFound = false;
+
+    modifiedCssContent = originalCssContent.replace(bodyRuleRegex, (match, bodyOpenTag, bodyContent, bodyCloseTag) => {
+      bodyRuleFound = true;
+      const bgColorRegex = /(background-color\s*:\s*)(?:[^;]+)(\s*;?)/i; // Regex para 'background-color: valor;'
+
+      if (bgColorRegex.test(bodyContent)) {
+        // Propriedade background-color existe, substitui o valor
+        bodyContent = bodyContent.replace(bgColorRegex, `$1${newColor}$2`);
+        console.log(`Propriedade 'background-color' atualizada para ${newColor}.`);
+      } else {
+        // Propriedade background-color não existe dentro da regra body, adiciona
+        let trimmedBodyContent = bodyContent.trim();
+        if (trimmedBodyContent && !trimmedBodyContent.endsWith(';') && !trimmedBodyContent.endsWith('}')) {
+          trimmedBodyContent += ';'; // Garante ponto e vírgula na última propriedade existente
+        }
+        const spacing = bodyContent.includes('\n') ? '\n  ' : ' '; // Mantém uma formatação mínima
+        bodyContent = `${spacing}${trimmedBodyContent}${trimmedBodyContent ? spacing : ''}background-color: ${newColor};${bodyContent.includes('\n') ? '\n' : ''}`;
+        console.log(`Propriedade 'background-color: ${newColor}' adicionada à regra body.`);
+      }
+      changesMade = true;
+      return `${bodyOpenTag}${bodyContent}${bodyCloseTag}`;
+    });
+
+    if (!bodyRuleFound) {
+      // Regra 'body { ... }' não foi encontrada no arquivo. Adiciona uma nova.
+      const separator = originalCssContent.trim() === '' ? '' : '\n\n';
+      modifiedCssContent += `${separator}body {\n  background-color: ${newColor};\n}\n`;
+      console.log(`Regra 'body' não encontrada. Nova regra adicionada ao final do arquivo ${cssFilePath}.`);
+      changesMade = true;
+    }
+
+    if (changesMade && modifiedCssContent !== originalCssContent) {
+      fs.writeFileSync(cssFilePath, modifiedCssContent, 'utf8');
+      console.log(`Arquivo CSS "${cssFilePath}" salvo com sucesso.`);
+    } else if (changesMade && modifiedCssContent === originalCssContent) {
+      // Isso pode acontecer se a cor já for a mesma ou a lógica de substituição não alterou o conteúdo.
+      console.log('Nenhuma alteração real no conteúdo do CSS, arquivo não salvo.');
+    } else if (!changesMade && bodyRuleFound) {
+        console.warn(`Regra 'body' processada, mas nenhuma alteração feita. Verifique a lógica interna.`)
+    }
+
+  } catch (error) {
+    console.error(`Falha ao ler ou escrever no arquivo CSS "${cssFilePath}":`, error);
+    // Opcional: notificar o usuário na interface sobre o erro
+    mainWindow.webContents.send('show-error-message', `Erro ao salvar cor no CSS: ${error.message}`);
+  }
+}
 
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit();
