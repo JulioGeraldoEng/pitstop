@@ -42,8 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
         exibirMensagem(resultado.message || 'Erro ao salvar cliente.', 'red');
       }
     } catch (error) {
-      console.error('Erro ao salvar cliente:', error);
-      exibirMensagem('Erro interno. Verifique o console.', 'red');
+      exibirMensagem('Erro. Telefone já cadastrado.', 'red');
     }
   });
 

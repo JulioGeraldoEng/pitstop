@@ -29,29 +29,60 @@
         <li>
             <span class="feature-toggle" data-target="details-controle-produtos">Controle de Produtos</span>
             <div class="feature-details" id="details-controle-produtos">
-                <p>Gerencie seu inventário de produtos, adicione novos itens, defina preços, e mantenha o controle de estoque.</p>
-                </div>
+                <p>Mantenha seu catálogo de produtos sempre atualizado e organizado. Ao adicionar ou editar um produto, você poderá informar:</p>
+                <ul>
+                    <li><strong>Nome do Produto:</strong> Descrição clara do item para fácil identificação.</li>
+                    <li><strong>Código:</strong> Um código único (SKU, código de barras) para o produto, se aplicável.</li>
+                    <li><strong>Preço de Venda:</strong> O valor pelo qual o produto será vendido ao cliente.</li>
+                    <li><strong>Estoque Atual:</strong> Quantidade disponível do produto. Este valor pode ser atualizado automaticamente com as vendas.</li>
+                    <li><strong>Observações:</strong> Detalhes adicionais sobre o produto, como especificações, fornecedor, ou notas internas.</li>
+                </ul>
+                <p>Clique em "Salvar" para registrar as informações. A lista de "Produtos Cadastrados" permite visualizar, editar ou remover produtos do seu catálogo, além de oferecer uma visão rápida do estoque.</p>
+            </div>
         </li>
 
         <li>
             <span class="feature-toggle" data-target="details-registro-vendas">Registro de Vendas</span>
             <div class="feature-details" id="details-registro-vendas">
-                <p>Registre todas as suas vendas de forma simples e rápida, associando produtos e clientes a cada transação.</p>
-                </div>
+                <p>Realize vendas de forma ágil e eficiente. O processo de registro de uma nova venda geralmente envolve:</p>
+                <ul>
+                    <li><strong>Seleção do Cliente:</strong> Associe a venda a um cliente cadastrado (opcional, para vendas avulsas).</li>
+                    <li><strong>Adição de Produtos:</strong> Busque produtos no seu catálogo e adicione-os à venda, especificando a quantidade.</li>
+                    <li><strong>Forma de Pagamento:</strong> Indique como o cliente está pagando (Dinheiro, Cartão de Crédito/Débito, Pix, Venda a Prazo, etc.).</li>
+                    <li><strong>Descontos ou Acréscimos:</strong> Aplique descontos ou taxas adicionais se necessário.</li>
+                    <li><strong>Observações da Venda:</strong> Anote informações relevantes sobre a transação.</li>
+                </ul>
+                <p>Ao "Finalizar Venda", o sistema automaticamente dá baixa no estoque dos produtos vendidos e registra a transação para futuros relatórios. Vendas a prazo geram registros nas contas a receber.</p>
+            </div>
         </li>
 
-        <li>
+         <li>
             <span class="feature-toggle" data-target="details-gestao-recebimentos">Gestão de Recebimentos</span>
             <div class="feature-details" id="details-gestao-recebimentos">
-                <p>Acompanhe os pagamentos pendentes, registre recebimentos e mantenha a saúde financeira do seu negócio em dia.</p>
-                </div>
+                <p>Controle todas as suas contas a receber, especialmente aquelas originadas de vendas a prazo. Nesta seção, você pode:</p>
+                <ul>
+                    <li><strong>Visualizar Pendências:</strong> Liste todos os recebimentos pendentes, com informações de cliente, valor e data de vencimento.</li>
+                    <li><strong>Registrar Pagamentos (Baixa):</strong> Marque as contas como pagas, informando a data e a forma como o pagamento foi efetuado. É possível registrar pagamentos parciais.</li>
+                    <li><strong>Filtrar e Buscar:</strong> Encontre rapidamente recebimentos específicos por cliente, período de vencimento ou status.</li>
+                    <li><strong>Status de Pagamento:</strong> Acompanhe facilmente o que está em aberto, pago ou vencido.</li>
+                </ul>
+                <p>Manter essa seção atualizada é crucial para a saúde financeira do seu negócio, permitindo um acompanhamento preciso do fluxo de caixa e da inadimplência.</p>
+            </div>
         </li>
 
         <li>
             <span class="feature-toggle" data-target="details-relatorios">Relatórios Detalhados</span>
             <div class="feature-details" id="details-relatorios">
-                <p>Acesse relatórios completos sobre vendas, produtos mais vendidos, desempenho de clientes e muito mais para auxiliar na sua gestão.</p>
-                </div>
+                <p>Obtenha insights valiosos sobre o desempenho do seu negócio através de diversos relatórios. Alguns dos relatórios disponíveis podem incluir:</p>
+                <ul>
+                    <li><strong>Vendas por Período:</strong> Analise o volume de vendas diário, semanal, mensal ou em um período personalizado.</li>
+                    <li><strong>Produtos Mais Vendidos:</strong> Identifique quais produtos têm maior saída e contribuem mais para o faturamento.</li>
+                    <li><strong>Desempenho de Clientes:</strong> Veja o histórico de compras por cliente, identificando seus clientes mais valiosos.</li>
+                    <li><strong>Contas a Receber:</strong> Relatório detalhado de valores pendentes, pagos e vencidos.</li>
+                    <li><strong>Fluxo de Caixa:</strong> (Se aplicável) Um resumo das entradas e saídas financeiras.</li>
+                </ul>
+                <p>Utilize filtros por data, cliente, produto, entre outros, para refinar sua análise. Muitos relatórios podem ser exportados (ex: PDF) para compartilhamento ou arquivamento.</p>
+            </div>
         </li>
 
         <li>E muito mais!</li>
@@ -61,5 +92,6 @@
     <p>O sistema permite que você organize suas operações de forma eficiente. A navegação é intuitiva, com menus claros que te levam diretamente para a funcionalidade desejada. Cada seção foi pensada para ser autoexplicativa, mas esta página de "Sobre" oferece um guia rápido para as principais operações.</p>
 
     <script src="sobre.js"></script>
+    <script src="../assets/js/global-scripts.js" defer></script>
 </body>
 </html>

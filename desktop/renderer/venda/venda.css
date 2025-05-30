@@ -1,77 +1,5 @@
-/* Campos agrupados em linha (padrão do sistema) */
-.form-linha {
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  margin-bottom: 20px;
-}
-
-/* Campo individual */
-.campo {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-width: 150px;
-}
-
-.campo label {
-  font-weight: bold;
-  margin-bottom: 5px;
-}
-
-.campo input {
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  box-sizing: border-box;
-}
-
-/* Botão dentro do formulário */
-.campo.botao {
-  flex: 0 0 auto;
-}
-
-.campo.botao button {
-  padding: 10px 15px;
-  height: 42px;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.campo.botao button:hover {
-  background-color: #218838;
-}
-
-/* Botões padrão */
-button {
-  padding: 10px 20px;
-  margin: 5px;
-  background-color: #0078d7;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #005fa3;
-}
-
 /* Tabela de venda */
-#tabela-venda1 {
-  margin-top: 30px;
-  max-width: 900px;
-  margin-left: auto;
-  margin-right: auto;
-  background-color: #ffffff;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
+#tabela-venda1,
 #tabela-venda {
   margin-top: 30px;
   max-width: 900px;
@@ -82,7 +10,6 @@ button:hover {
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
-
 
 .tabela-venda th,
 .tabela-venda td {

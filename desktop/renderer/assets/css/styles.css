@@ -156,3 +156,35 @@ input {
   cursor: pointer;
 }
 
+/* Em assets/css/styles.css */
+
+/* Em assets/css/styles.css */
+
+#app-footer {
+    background-color: rgba(0, 0, 0, 0.85); /* Sua cor com transparência */
+    color: #ffffff;
+    text-align: center; /* Centraliza o <p> dentro do footer se o <p> for mais estreito */
+    padding: 10px 10px;
+    font-size: 0.85em;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    box-sizing: border-box;
+    /* Adicione overflow-x: auto; ao #app-footer também, caso o <p> interno seja mais largo que ele */
+    overflow-x: auto;
+}
+
+#app-footer-content p {
+    margin: 0; /* Remove margens padrão do parágrafo */
+    white-space: nowrap; /* Impede que o texto quebre para a linha de baixo */
+    /* Se você quiser que o texto dentro do <p> seja centralizado,
+       e o <p> seja quem rola, você pode dar a ele display: inline-block
+       e o #app-footer com text-align: center cuidará do centramento do bloco.
+       Caso contrário, o texto dentro do <p> começará da esquerda. */
+    display: inline-block; /* Faz o <p> se ajustar ao conteúdo e permite centralização pelo pai */
+    min-width: 100%; /* Garante que o <p> tente ocupar pelo menos a largura do #app-footer-content */
+                     /* mas com inline-block e nowrap, ele vai se estender conforme o conteúdo */
+    text-align: center; /* Centraliza o texto dentro do parágrafo, caso o parágrafo seja maior que o texto */
+}

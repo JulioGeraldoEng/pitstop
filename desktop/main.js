@@ -842,47 +842,52 @@ app.whenReady().then(async () => {
     ]
   },
   {
-    label: 'Sobre o Pitstop',
-    click: () => {
-      // Se a janela "Sobre" já estiver aberta, foque nela
-      if (aboutWindow) {
-        aboutWindow.focus();
-        return;
-      }
+    label: 'Ajuda', // Nome do menu de ajuda',
+    submenu: [
+      {
+        label: 'Sobre o Pitstop',
+        click: () => {
 
-      // Criar uma nova janela para o "Sobre"
-      aboutWindow = new BrowserWindow({
-        width: 500, // Largura da janela "Sobre"
-        height: 450, // Altura da janela "Sobre"
-        title: 'Sobre o Pitstop', // Título da janela
-        icon: path.join(__dirname, 'renderer', 'assets', 'icon', 'pitstop_icon.ico'),
-        // parent: mainWindow, // Descomente se quiser que seja filha da janela principal
-        // modal: true,       // Descomente se quiser que seja modal (bloqueia interação com a parente)
-        resizable: false,    // Impede redimensionamento
-        minimizable: false,  // Impede minimização (opcional)
-        maximizable: false,  // Impede maximização (opcional)
-        // autoHideMenuBar: true, // Oculta a barra de menu (comum para janelas "Sobre")
-        webPreferences: {
-          nodeIntegration: false, // Mantenha false por segurança
-          contextIsolation: true, // Mantenha true por segurança
-          // preload: path.join(__dirname, 'about-preload.js') // Se precisar de um preload específico
+          if (aboutWindow) {
+            aboutWindow.focus();
+            return;
+          }
+
+          // Criar uma nova janela para o "Sobre"
+          aboutWindow = new BrowserWindow({
+            width: 500, // Largura da janela "Sobre"
+            height: 450, // Altura da janela "Sobre"
+            title: 'Sobre o Pitstop', // Título da janela
+            icon: path.join(__dirname, 'renderer', 'assets', 'icon', 'pitstop_icon.ico'),
+            // parent: mainWindow, // Descomente se quiser que seja filha da janela principal
+            // modal: true,       // Descomente se quiser que seja modal (bloqueia interação com a parente)
+            resizable: false,    // Impede redimensionamento
+            minimizable: false,  // Impede minimização (opcional)
+            maximizable: false,  // Impede maximização (opcional)
+            // autoHideMenuBar: true, // Oculta a barra de menu (comum para janelas "Sobre")
+            webPreferences: {
+              nodeIntegration: false, // Mantenha false por segurança
+              contextIsolation: true, // Mantenha true por segurança
+              // preload: path.join(__dirname, 'about-preload.js') // Se precisar de um preload específico
+            }
+          });
+
+          // Carrega o arquivo sobre.html na nova janela
+          // Certifique-se que o caminho para 'sobre.html' está correto
+          aboutWindow.loadFile(path.join(__dirname, 'renderer', 'sobre', 'sobre.html'));
+          // Se 'sobre.html' estiver em uma pasta 'assets':
+          // aboutWindow.loadFile(path.join(__dirname, 'assets', 'sobre.html'));
+
+          // Opcional: Remover o menu da janela "Sobre"
+          aboutWindow.setMenu(null);
+
+          // Limpa a referência da janela quando ela for fechada
+          aboutWindow.on('closed', () => {
+            aboutWindow = null;
+          });
         }
-      });
-
-      // Carrega o arquivo sobre.html na nova janela
-      // Certifique-se que o caminho para 'sobre.html' está correto
-      aboutWindow.loadFile(path.join(__dirname, 'renderer', 'sobre', 'sobre.html'));
-      // Se 'sobre.html' estiver em uma pasta 'assets':
-      // aboutWindow.loadFile(path.join(__dirname, 'assets', 'sobre.html'));
-
-      // Opcional: Remover o menu da janela "Sobre"
-      aboutWindow.setMenu(null);
-
-      // Limpa a referência da janela quando ela for fechada
-      aboutWindow.on('closed', () => {
-        aboutWindow = null;
-      });
-    }
+      },
+    ]
   },
   // Adicione mais menus como 'Editar', 'Visualizar' conforme necessário
   // Exemplo de um menu 'Editar' com roles comuns:
@@ -930,6 +935,39 @@ app.whenReady().then(async () => {
             updateCssBackgroundColor('rgb(173, 216, 230)');
           }
         }
+      ]
+    },
+    {
+      label: 'Configurações',
+      submenu: [
+        {
+          label: 'Preferências do Aplicativo...',
+          click: () => {
+            // Lógica para abrir uma janela de configurações/preferências
+            // Ex: criar uma nova BrowserWindow e carregar um 'configuracoes.html'
+            console.log('Abrir janela de Preferências do Aplicativo');
+          }
+        },
+        {
+          label: 'Backup e Restauração de Dados...',
+          click: () => {
+            // Lógica para abrir ferramentas de backup/restauração
+            console.log('Abrir Backup/Restauração');
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Sincronizar Status Atrasados', // Você tinha isso no seu preload
+          click: () => {
+            // Idealmente, isso envia uma mensagem para o renderer, que então chama
+            // a função da API do preload, ou o main process lida com isso diretamente.
+            if (mainWindow && mainWindow.webContents) {
+              console.log('Solicitando sincronização de status atrasados...');
+              mainWindow.webContents.send('trigger-action', 'sincronizarStatusAtrasados');
+            }
+          }
+        },
+        // Você poderia adicionar aqui "Importar Dados...", "Exportar Dados..." etc.
       ]
     }
 ];
