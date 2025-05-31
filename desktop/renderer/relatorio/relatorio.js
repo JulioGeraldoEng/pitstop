@@ -225,18 +225,15 @@ function validarFiltrosData({ dataInicio, dataFim, vencimentoInicio, vencimentoF
 }
 
 // ===================== [ PROCESSAMENTO DOS RESULTADOS ] =====================
-// ... (sua função processarResultados permanece a mesma, mas certifique-se de que as
-//      variáveis globais como divTabela, resumoRelatorioDiv, totalRelatorio são usadas corretamente
-//      ou obtidas dentro da função se não forem globais)
 function processarResultados(vendas, filtros) {
-  const divTabelaLocal = document.getElementById('tabela-relatorio'); // Use vars locais para clareza
+  const divTabelaLocal = document.getElementById('tabela-relatorio');
   const tabelaVendasLocal = document.getElementById('tabela-vendas').querySelector('tbody');
   const resumoRelatorioDivLocal = document.getElementById('resumo-relatorio');
   const totalRelatorioLocal = document.getElementById('totalRelatorio');
-  
+
   if (!tabelaVendasLocal || !resumoRelatorioDivLocal || !totalRelatorioLocal || !divTabelaLocal) {
-      console.error("Elementos do DOM para resultados não encontrados!");
-      return;
+    console.error("Elementos do DOM para resultados não encontrados!");
+    return;
   }
 
   tabelaVendasLocal.innerHTML = '';
@@ -263,7 +260,7 @@ function processarResultados(vendas, filtros) {
         <td></td>                                
         <td></td>                               
       `;
-      tabelaVendas.appendChild(trVenda);
+      tabelaVendasLocal.appendChild(trVenda);
 
       if (venda.itens && venda.itens.length > 0) {
         venda.itens.forEach(item => {
@@ -279,15 +276,14 @@ function processarResultados(vendas, filtros) {
             <td></td>
             <td>${item.nome_produto || '-'}</td>          
             <td>${item.quantidade || '-'}</td>            
-            <td>R$ ${formatarMoeda(item.preco_unitario)}</td> `;
-          tabelaVendas.appendChild(trItem);
+            <td>R$ ${formatarMoeda(item.preco_unitario)}</td>`;
+          tabelaVendasLocal.appendChild(trItem);
         });
       } else {
         const trItem = document.createElement('tr');
         trItem.classList.add('item-venda', 'sem-itens');
-        trItem.innerHTML = `
-          <td colspan="10">Nenhum item vendido nesta venda.</td>`;
-        tabelaVendas.appendChild(trItem);
+        trItem.innerHTML = `<td colspan="10">Nenhum item vendido nesta venda.</td>`;
+        tabelaVendasLocal.appendChild(trItem);
       }
     });
 
@@ -296,15 +292,23 @@ function processarResultados(vendas, filtros) {
     totalRelatorioLocal.textContent = `Total Geral: R$ ${formatarMoeda(totalGeral)}`;
     exibirMensagem(`${vendas.length} vendas encontradas.`, 'green');
 
-    dadosUltimoRelatorio = vendas; // Armazena os dados do último relatório para uso posterior
+    dadosUltimoRelatorio = vendas; // Armazena os dados do último relatório
 
   } else {
+    const trVazio = document.createElement('tr');
+    trVazio.innerHTML = `
+      <td colspan="10" style="text-align: center; color: #666;">
+        Nenhuma venda encontrada com os filtros informados.
+      </td>`;
+    tabelaVendasLocal.appendChild(trVazio);
+
+    divTabelaLocal.style.display = 'block';
+    resumoRelatorioDivLocal.style.display = 'none';
+    totalRelatorioLocal.textContent = '';
     exibirMensagem('Nenhuma venda encontrada com os filtros informados.', 'blue');
-    divTabelaLocal.style.display = 'none'; // Oculta a tabela se não houver resultados
-    resumoRelatorioDivLocal.style.display = 'none'; // Oculta o resumo
-    totalRelatorioLocal.textContent = ''; // Limpa o total
   }
 }
+
 
 
 // ===================== [ AUTOCOMPLETE DE CLIENTES ] =====================

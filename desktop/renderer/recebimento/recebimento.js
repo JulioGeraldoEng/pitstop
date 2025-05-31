@@ -6,6 +6,10 @@ if (!localStorage.getItem('usuarioLogado')) {
 let clienteSelecionadoId = null;
 // let dadosUltimoRelatorio = []; // Removido pois não foi usado na última versão
 
+// Autocomplete e outras funções (manter o que já estava funcionando e foi corrigido)
+const inputClienteElement = document.getElementById('cliente'); // Usar a variável correta
+const sugestoesClienteElement = document.getElementById('sugestoesCliente');
+
 // Funções auxiliares
 function converterParaNumero(valor) {
     if (valor === null || valor === undefined || valor === '') return 0; // Trata string vazia como 0
@@ -19,6 +23,7 @@ function converterParaNumero(valor) {
     return isNaN(numero) ? 0 : numero;
 }
 
+// Função para formatar valores monetários (ex: 1234.56 -> "1.234,56")
 function formatarMoeda(valor) {
     const numero = converterParaNumero(valor);
     return numero.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -123,7 +128,7 @@ function formatarInputMoeda(event) {
     event.target.value = partes.join(',');
 }
 
-
+// Evento de carregamento do DOM
 document.addEventListener('DOMContentLoaded', async () => {
     const btnBuscarRecebimentos = document.getElementById('buscarRecebimentos');
     const btnLimparBuscaRecebimentos = document.getElementById('limparBuscaRecebimentos');
@@ -135,57 +140,82 @@ document.addEventListener('DOMContentLoaded', async () => {
     mensagem.style.display = 'none';
     document.getElementById('tabela-recebimentos').style.display = 'none';
 
-    btnBuscarRecebimentos.addEventListener('click', async () => {
-        // (código de busca existente, sem alterações nesta parte)
-        const status = statusRecebimentoInput.value;
-        try {
-            btnBuscarRecebimentos.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Buscando...';
-            btnBuscarRecebimentos.disabled = true;
-            exibirMensagem('');
-            const divTabelaRecebimentos = document.getElementById('tabela-recebimentos');
-            divTabelaRecebimentos.style.display = 'none';
+    btnBuscarRecebimentos.addEventListener('click', buscarRecebimentos);
 
-            const filtros = {
-                cliente: inputCliente.value.trim(),
-                status
-            };
-            const recebimentos = await window.electronAPI.buscarRecebimentos(filtros);
-            tabelaContasReceber.innerHTML = '';
+    tabelaContasReceber.addEventListener('click', ContasReceber);
 
-            if (recebimentos && recebimentos.length > 0) {
-                recebimentos.forEach(recebimento => {
-                    const tr = document.createElement('tr');
-                    tr.dataset.valorTotal = recebimento.valor_total; // Armazena o valor total na linha
-                    tr.innerHTML = `
-                        <td>${recebimento.id || '-'}</td>
-                        <td>${recebimento.venda_id || '-'}</td>
-                        <td>${recebimento.cliente || '-'}</td>
-                        <td>${formatarData(recebimento.data_vencimento)}</td>
-                        <td>R$ ${formatarMoeda(recebimento.valor_total)}</td>
-                        <td>R$ ${formatarMoeda(recebimento.valor_pago)}</td>
-                        <td>${formatarData(recebimento.data_pagamento)}</td>
-                        <td>${recebimento.status || '-'}</td>
-                        <td>${recebimento.forma_pagamento || '-'}</td>
-                        <td><button class="btn-acao" data-recebimento-id="${recebimento.id}">Ações</button></td>
-                    `;
-                    tabelaContasReceber.appendChild(tr);
-                });
-                 divTabelaRecebimentos.style.display = 'block';
-                 exibirMensagem(`${recebimentos.length} contas a receber encontradas.`, 'green');
-            } else {
-                exibirMensagem('Nenhuma conta a receber encontrada com os filtros informados.', 'blue');
-            }
-        } catch (error) {
-            console.error('Erro ao buscar recebimentos:', error);
-            exibirMensagem('Erro ao conectar com o banco de dados. Verifique sua conexão.', 'red');
-        } finally {
-            btnBuscarRecebimentos.innerHTML = '<i class="fas fa-search"></i> Buscar';
-            btnBuscarRecebimentos.disabled = false;
-        }
+    btnLimparBuscaRecebimentos.addEventListener('click', () => {
+        limparRelatorioRecebimentos();
     });
+});
 
-    tabelaContasReceber.addEventListener('click', async (event) => {
-        if (event.target.classList.contains('btn-acao')) {
+// =================== BUSCA E EXIBIÇÃO ===================
+async function buscarRecebimentos() {
+  const status = document.getElementById('statusRecebimento').value;
+  const inputCliente = document.getElementById('cliente');
+  const tabelaContasReceber = document.getElementById('tabela-contas-receber').querySelector('tbody');
+  const divTabelaRecebimentos = document.getElementById('tabela-recebimentos');
+  const mensagem = document.getElementById('mensagem');
+  const btnBuscarRecebimentos = document.getElementById('buscarRecebimentos');
+
+  try {
+    btnBuscarRecebimentos.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Buscando...';
+    btnBuscarRecebimentos.disabled = true;
+    exibirMensagem('');
+    divTabelaRecebimentos.style.display = 'none';
+    tabelaContasReceber.innerHTML = '';
+
+    const filtros = {
+      cliente: inputCliente.value.trim(),
+      status
+    };
+
+    const recebimentos = await window.electronAPI.buscarRecebimentos(filtros);
+
+    if (recebimentos && recebimentos.length > 0) {
+      recebimentos.forEach(recebimento => {
+        const tr = document.createElement('tr');
+        tr.dataset.valorTotal = recebimento.valor_total;
+        tr.innerHTML = `
+          <td>${recebimento.id || '-'}</td>
+          <td>${recebimento.venda_id || '-'}</td>
+          <td>${recebimento.cliente || '-'}</td>
+          <td>${formatarData(recebimento.data_vencimento)}</td>
+          <td>R$ ${formatarMoeda(recebimento.valor_total)}</td>
+          <td>R$ ${formatarMoeda(recebimento.valor_pago)}</td>
+          <td>${formatarData(recebimento.data_pagamento)}</td>
+          <td>${recebimento.status || '-'}</td>
+          <td>${recebimento.forma_pagamento || '-'}</td>
+          <td><button class="btn-acao" data-recebimento-id="${recebimento.id}">Ações</button></td>
+        `;
+        tabelaContasReceber.appendChild(tr);
+      });
+
+      divTabelaRecebimentos.style.display = 'block';
+      exibirMensagem(`${recebimentos.length} contas a receber encontradas.`, 'green');
+    } else {
+      const trVazio = document.createElement('tr');
+      trVazio.innerHTML = `
+        <td colspan="10" style="text-align: center; color: #666;">
+          Nenhuma conta a receber encontrada com os filtros informados.
+        </td>`;
+      tabelaContasReceber.appendChild(trVazio);
+
+      divTabelaRecebimentos.style.display = 'block';
+      exibirMensagem('Nenhuma conta a receber encontrada com os filtros informados.', 'blue');
+    }
+  } catch (error) {
+    console.error('Erro ao buscar recebimentos:', error);
+    exibirMensagem('Erro ao conectar com o banco de dados. Verifique sua conexão.', 'red');
+  } finally {
+    btnBuscarRecebimentos.innerHTML = '<i class="fas fa-search"></i> Buscar';
+    btnBuscarRecebimentos.disabled = false;
+  }
+}
+
+// Função para lidar com ações de contas a receber
+async function ContasReceber(event) {
+    if (event.target.classList.contains('btn-acao')) {
             const recebimentoId = event.target.dataset.recebimentoId;
             if (recebimentoId) {
                 const botaoAcoes = event.target;
@@ -341,13 +371,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 };
             }
         }
-    });
+}
 
-    btnLimparBuscaRecebimentos.addEventListener('click', () => {
-        limparRelatorioRecebimentos();
-    });
-});
-
+// Função para limpar o relatório de recebimentos
 function limparRelatorioRecebimentos() {
     document.getElementById('cliente').value = '';
     document.getElementById('statusRecebimento').value = '';
@@ -357,10 +383,7 @@ function limparRelatorioRecebimentos() {
     clienteSelecionadoId = null;
 }
 
-// Autocomplete e outras funções (manter o que já estava funcionando e foi corrigido)
-const inputClienteElement = document.getElementById('cliente'); // Usar a variável correta
-const sugestoesClienteElement = document.getElementById('sugestoesCliente');
-
+// Função para posicionar a caixa de sugestões abaixo do input
 function posicionarSugestoes(input, box) {
     const rect = input.getBoundingClientRect();
     box.style.left = `${rect.left + window.scrollX}px`;
@@ -369,6 +392,7 @@ function posicionarSugestoes(input, box) {
     box.style.display = 'block';
 }
 
+// Evento de input no campo de cliente para autocomplete
 inputClienteElement.addEventListener('input', async function() {
     clienteSelecionadoId = null;
     const termo = this.value.trim();
@@ -401,6 +425,7 @@ inputClienteElement.addEventListener('input', async function() {
     }
 });
 
+// Evento de foco no campo de cliente para exibir sugestões
 document.addEventListener('click', (e) => {
     if (sugestoesClienteElement && !sugestoesClienteElement.contains(e.target) && e.target !== inputClienteElement) {
         sugestoesClienteElement.innerHTML = '';
@@ -408,6 +433,7 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// Função para exibir mensagens na tela
 function exibirMensagem(texto, cor) {
     const mensagemElement = document.getElementById('mensagem');
     if (mensagemElement) {
@@ -422,11 +448,13 @@ function exibirMensagem(texto, cor) {
     }
 }
 
+// Função para logout
 function logout() {
     localStorage.removeItem('usuarioLogado');
     window.location.href = '../login/login.html';
 }
 
+// Função para redirecionar para outra página
 function irPara(pagina) {
     window.location.href = pagina;
 }

@@ -1,0 +1,36 @@
+<!-- cadastro.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cadastro de Usuário - PitStop</title>
+  <link rel="stylesheet" href="../assets/css/styles.css" />
+  <link rel="stylesheet" href="usuario.css" />
+</head>
+<body>
+  <form id="cadastroForm">
+    <div><img src="../assets/icon/pitstop_icon.ico" style="width: 64px; margin-bottom: 0px;"></div>
+    <h2>Cadastrar Novo Usuário</h2>
+
+    <label for="novoUsuario">Usuário:</label>
+    <input type="text" id="novoUsuario" required>
+
+    <label for="novaSenha">Senha:</label>
+    <input type="password" id="novaSenha" required>
+
+    <button type="submit">Cadastrar</button>
+    <p id="mensagem-cadastro" style="color: red;"></p>
+
+    <button type="button" onclick="voltarLogin()">Voltar para o login</button>
+  </form>
+
+  <script>
+    function voltarLogin() {
+      window.location.href = '../login/login.html';
+    }
+  </script>
+
+  <script src="usuario.js"></script>
+</body>
+</html>
