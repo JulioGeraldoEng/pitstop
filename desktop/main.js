@@ -17,6 +17,8 @@ const db = new sqlite3.Database(dbPath);
 
 const cssFilePath = path.join(__dirname, 'renderer', 'assets', 'css', 'styles.css');
 
+const bcrypt = require('bcrypt');
+
 // Variável para armazenar a janela principal
 let mainWindow;
 let aboutWindow = null; // Janela "Sobre"
@@ -31,7 +33,8 @@ function initializeDatabase() {
         usuario TEXT NOT NULL UNIQUE,
         senha TEXT NOT NULL
       )`);
-      db.run(`INSERT INTO usuarios (usuario, senha) VALUES ('admin', '1234')`);
+      const senhaAdmin = bcrypt.hashSync('1234', 10); // Cria a senha do admin com bcrypt
+      db.run(`INSERT INTO usuarios (usuario, senha) VALUES ('admin', ?)`, [senhaAdmin]);
       db.run(`CREATE TABLE IF NOT EXISTS clientes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT NOT NULL,
@@ -113,30 +116,35 @@ function createWindow() {
 ipcMain.handle('login-attempt', async (event, { username, password }) => {
   return new Promise((resolve, reject) => {
     db.get(
-      "SELECT id FROM usuarios WHERE usuario = ? AND senha = ?",
-      [username, password],
+      "SELECT id, senha FROM usuarios WHERE usuario = ?",
+      [username],
       (err, row) => {
         if (err) {
           console.error('Erro no banco de dados:', err);
-          return resolve({
-            success: false,
-            message: 'Erro no servidor. Tente novamente.'
-          });
+          return resolve({ success: false, message: 'Erro no servidor.' });
         }
 
-        if (row) {
-          resolve({
-            success: true,
-            userId: row.id
-          });
+        if (row && bcrypt.compareSync(password, row.senha)) {
+          resolve({ success: true, userId: row.id });
         } else {
-          resolve({
-            success: false,
-            message: 'Usuário ou senha incorretos'
-          });
+          resolve({ success: false, message: 'Usuário ou senha incorretos' });
         }
       }
     );
+  });
+});
+
+// Handler para cadastrar usuário
+ipcMain.handle('cadastrarUsuario', async (event, usuario, senha) => {
+  return new Promise((resolve) => {
+    const senhaHash = bcrypt.hashSync(senha, 10);
+    db.run("INSERT INTO usuarios (usuario, senha) VALUES (?, ?)", [usuario, senhaHash], function (err) {
+      if (err) {
+        console.error('Erro ao cadastrar usuário:', err.message);
+        return resolve({ success: false, message: 'Usuário já existe ou erro no cadastro.' });
+      }
+      resolve({ success: true });
+    });
   });
 });
 

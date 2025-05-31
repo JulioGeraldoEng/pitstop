@@ -14,6 +14,12 @@ document.getElementById('cadastroForm').addEventListener('submit', async (e) => 
 
   const resultado = await window.electronAPI.cadastrarUsuario(usuario, senha);
 
+  if (senha.length < 4) {
+    mensagemCadastro.textContent = 'A senha deve ter pelo menos 4 caracteres';
+    return;
+  }
+
+
   if (resultado.success) {
     mensagemCadastro.textContent = 'Usuário cadastrado com sucesso!';
     mensagemCadastro.style.color = 'green';
