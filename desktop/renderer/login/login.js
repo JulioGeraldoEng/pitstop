@@ -96,5 +96,10 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   }
 });
 
+// Navegação (se precisar no futuro)
+function irPara(pagina) {
+  window.location.href = pagina;
+}
+
 // Monitoramento contínuo de campos (segurança extra)
 setInterval(unlockFields, 1000);

@@ -20,10 +20,23 @@
 
         <button type="submit">Entrar</button>
 
-        <p style="text-align: center; margin-top: 10px;">
-            <a href="../usuario/usuario.html">Cadastrar novo usuário</a>
+        <p style="text-align: center;">
+            <button type="button" onclick="irPara('../usuario/usuario.html')">
+                Cadastrar novo usuário
+            </button>
         </p>
 
+        <p style="text-align: center;">
+            <button type="button" onclick="irPara('../usuario/alterar-senha.html')">
+                Alterar senha
+            </button>
+        </p>
+
+        <p style="text-align: center;">
+            <button type="button" onclick="irPara('../usuario/esqueci-senha.html')">
+                Esqueci minha senha
+            </button>
+        </p>
 
         <p id="mensagem" style="color: red;"></p>
     </form>

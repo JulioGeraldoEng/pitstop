@@ -148,6 +148,55 @@ ipcMain.handle('cadastrarUsuario', async (event, usuario, senha) => {
   });
 });
 
+// Handler para alterar senha
+ipcMain.handle('alterarSenha', async (event, { usuario, senhaAtual, novaSenha }) => {
+  return new Promise((resolve) => {
+    db.get("SELECT senha FROM usuarios WHERE usuario = ?", [usuario], (err, row) => {
+      if (err || !row) return resolve({ success: false, message: 'Usuário não encontrado.' });
+
+      const senhaCorreta = bcrypt.compareSync(senhaAtual, row.senha);
+      if (!senhaCorreta) return resolve({ success: false, message: 'Senha atual incorreta.' });
+
+      const novaHash = bcrypt.hashSync(novaSenha, 10);
+      db.run("UPDATE usuarios SET senha = ? WHERE usuario = ?", [novaHash, usuario], function (err) {
+        if (err) return resolve({ success: false, message: 'Erro ao atualizar senha.' });
+        resolve({ success: true, message: 'Senha atualizada com sucesso.' });
+      });
+    });
+  });
+});
+
+// Handler para esqueci minha senha
+ipcMain.handle('redefinirSenha', async (event, { usuario, chaveMestra, novaSenha }) => {
+  const CHAVE_MESTRA = 'super123'; // ajuste aqui sua chave
+
+  console.log(`[DEBUG] Tentando redefinir senha de "${usuario}" com chave "${chaveMestra}"`);
+
+  return new Promise((resolve) => {
+    if (chaveMestra !== CHAVE_MESTRA) {
+      console.log('[DEBUG] Chave mestra incorreta.');
+      return resolve({ success: false, message: 'Chave mestra incorreta.' });
+    }
+
+    const novaHash = bcrypt.hashSync(novaSenha, 10);
+
+    db.run("UPDATE usuarios SET senha = ? WHERE usuario = ?", [novaHash, usuario], function (err) {
+      if (err) {
+        console.error('[ERRO] Falha no UPDATE do usuário:', err.message);
+        return resolve({ success: false, message: 'Erro ao atualizar senha.' });
+      }
+
+      if (this.changes === 0) {
+        console.warn('[DEBUG] Nenhum usuário atualizado. Nome de usuário não encontrado?');
+        return resolve({ success: false, message: 'Usuário não encontrado.' });
+      }
+
+      console.log('[SUCESSO] Senha redefinida com sucesso para:', usuario);
+      resolve({ success: true, message: 'Senha redefinida com sucesso.' });
+    });
+  });
+});
+
 // Handler para autocomplete de clientes por nome
 ipcMain.handle('buscar-clientes-por-nome', async (event, termo) => {
   return new Promise((resolve) => {

@@ -36,6 +36,8 @@ ipcRenderer.on('show-error-message', (_event, message) => {
 contextBridge.exposeInMainWorld('electronAPI', {
   sendLogin: (credentials) => ipcRenderer.invoke('login-attempt', credentials),
   cadastrarUsuario: (usuario, senha) => ipcRenderer.invoke('cadastrarUsuario', usuario, senha),
+  alterarSenha: (dados) => ipcRenderer.invoke('alterarSenha', dados),
+  redefinirSenha: (dados) => ipcRenderer.invoke('redefinirSenha', dados),
 
   // Clientes
   getClientes: () => ipcRenderer.invoke('get-clientes'),
