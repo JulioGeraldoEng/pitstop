@@ -5,8 +5,7 @@
   <title>Pitstop - Início</title>
   <link rel="stylesheet" href="../assets/css/styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link rel="stylesheet" href="dashboard.css">
-</head>
+  <link rel="stylesheet" href="./dashboard.css">
 <body>
   <div class="sidebar" id="sidebar">
 
@@ -25,9 +24,41 @@
   </div>
 
   <div class="main-content">
+    <header class="header">
+      <div class="user-info">
+        Usuário logado: <span id="loggedUser" class="user-badge"></span>
+      </div>
+    </header>
+
     <h1>Bem-vindo ao Sistema de Vendas PitStop</h1>
     <p>Escolha uma das opções no menu à esquerda.</p>
+
+    <div class="dashboard-info">
+      <div class="info-card">
+        <h3>Vendas Hoje</h3>
+        <p id="vendas-hoje">0</p>
+      </div>
+      <div class="info-card">
+        <h3>Vendas no Mês</h3>
+        <p id="vendas-mes">0</p>
+      </div>
+      <div class="info-card">
+        <h3>Total de Vendas</h3>
+        <p id="vendas-total">0</p>
+      </div>
+    </div>
+    <div class="status-vendas-container">
+      <h2>Status das Vendas</h2>
+      <div id="status-vendas" class="cards-status-container"></div>
+      
+    </div>
+   
+
   </div>
+
+  
+
+
 
   <script src="dashboard.js"></script>
   <script>
@@ -35,6 +66,16 @@
       document.getElementById('sidebar').classList.toggle('collapsed');
     }
   </script>
+  <script>
+    window.addEventListener('DOMContentLoaded', async () => {
+      const spanUsuario = document.getElementById('loggedUser');
+      if (spanUsuario && window.electronAPI) {
+        const nomeUsuario = await window.electronAPI.getUsuarioLogado();
+        spanUsuario.textContent = nomeUsuario || 'Usuário não identificado';
+      }
+    });
+  </script>
+
   <script src="../assets/js/global-scripts.js" defer></script>
 </body>
 </html>

@@ -2,6 +2,7 @@ const { app, Menu, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
+const { promisify } = require('util');
 
 // Caminho absoluto para a pasta 'db' e o arquivo do banco
 const pastaDB = path.join(__dirname, 'db');
@@ -15,6 +16,8 @@ if (!fs.existsSync(pastaDB)) {
 const dbExiste = fs.existsSync(dbPath);
 const db = new sqlite3.Database(dbPath);
 
+const dbAllAsync = promisify(db.all).bind(db);
+
 const cssFilePath = path.join(__dirname, 'renderer', 'assets', 'css', 'styles.css');
 
 const bcrypt = require('bcrypt');
@@ -22,6 +25,7 @@ const bcrypt = require('bcrypt');
 // Variável para armazenar a janela principal
 let mainWindow;
 let aboutWindow = null; // Janela "Sobre"
+let usuarioLogado = null; // Variável para armazenar o usuário logado
 
 // Função de inicialização do banco de dados (chamada apenas uma vez)
 function initializeDatabase() {
@@ -97,16 +101,32 @@ function createWindow() {
   });
 
   // Carrega a página de login ou dashboard
-  mainWindow.loadFile('renderer/login/login.html'); // Certifique-se de que este é o caminho correto
-
-  // Abre as DevTools (opcional)
-  // mainWindow.webContents.openDevTools();
-
+  //mainWindow.loadFile('renderer/login/login.html'); // Certifique-se de que este é o caminho correto
+  if (usuarioLogado) {
+    mainWindow.loadFile('renderer/dashboard/dashboard.html');
+  } else {
+    mainWindow.loadFile('renderer/login/login.html');
+  }
   // Limpa a referência à janela quando ela é fechada
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
 }
+
+function loginUsuario(usuario) {
+  try {
+    usuarioLogado = usuario;
+
+    if (mainWindow) {
+      mainWindow.loadFile('renderer/dashboard/dashboard.html');
+    } else {
+      console.error('mainWindow não está definido.');
+    }
+  } catch (erro) {
+    console.error('Erro ao carregar dashboard:', erro);
+  }
+}
+
 
 // ===========================================================================
 // IPC Main Handlers - REGISTRAR APENAS UMA VEZ AO INICIAR O APP
@@ -114,9 +134,9 @@ function createWindow() {
 
 // Login
 ipcMain.handle('login-attempt', async (event, { username, password }) => {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     db.get(
-      "SELECT id, senha FROM usuarios WHERE usuario = ?",
+      "SELECT id, usuario, senha FROM usuarios WHERE usuario = ?",
       [username],
       (err, row) => {
         if (err) {
@@ -125,6 +145,13 @@ ipcMain.handle('login-attempt', async (event, { username, password }) => {
         }
 
         if (row && bcrypt.compareSync(password, row.senha)) {
+          usuarioLogado = row.usuario;
+
+          // Redireciona para o dashboard
+          if (mainWindow) {
+            mainWindow.loadFile('renderer/dashboard/dashboard.html');
+          }
+
           resolve({ success: true, userId: row.id });
         } else {
           resolve({ success: false, message: 'Usuário ou senha incorretos' });
@@ -133,6 +160,11 @@ ipcMain.handle('login-attempt', async (event, { username, password }) => {
     );
   });
 });
+
+
+ipcMain.handle('get-usuario-logado', () => {
+   return usuarioLogado;
+ });
 
 // Handler para cadastrar usuário
 ipcMain.handle('cadastrarUsuario', async (event, usuario, senha) => {
@@ -559,6 +591,81 @@ ipcMain.handle('buscarVendas', async (event, filtros) => {
   });
 });
 
+// Retorna o número de vendas feitas hoje
+ipcMain.handle('contar-vendas-hoje', async () => {
+  return new Promise((resolve, reject) => {
+    const hoje = new Date();
+    const ano = hoje.getFullYear();
+    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+    const dia = String(hoje.getDate()).padStart(2, '0');
+    const dataLocal = `${ano}-${mes}-${dia}`;
+
+    const sql = `SELECT COUNT(*) AS total FROM vendas WHERE date(data) = ?`;
+    db.get(sql, [dataLocal], (err, row) => {
+      if (err) {
+        console.error(err);
+        return resolve(0);
+      }
+      resolve(row.total);
+    });
+  });
+});
+
+
+// Retorna o número de vendas feitas no mês atual
+ipcMain.handle('contar-vendas-mes', async () => {
+  return new Promise((resolve, reject) => {
+    const agora = new Date();
+    const ano = agora.getFullYear();
+    const mes = String(agora.getMonth() + 1).padStart(2, '0');
+    const anoMesLocal = `${ano}-${mes}`; // "YYYY-MM" no horário local
+
+    const sql = `SELECT COUNT(*) AS total FROM vendas WHERE substr(data, 1, 7) = ?`;
+    db.get(sql, [anoMesLocal], (err, row) => {
+      if (err) {
+        console.error(err);
+        return resolve(0);
+      }
+      resolve(row.total);
+    });
+  });
+});
+
+
+// Retorna o total de vendas (sem filtro)
+ipcMain.handle('contar-vendas-total', async () => {
+  return new Promise((resolve, reject) => {
+    const sql = `SELECT COUNT(*) AS total FROM vendas`;
+    db.get(sql, [], (err, row) => {
+      if (err) {
+        console.error(err);
+        return resolve(0);
+      }
+      resolve(row.total);
+    });
+  });
+});
+
+// Retorna o total de vendas por status
+
+ipcMain.handle('buscar-vendas-por-status', async () => {
+  try {
+    const vendasPorStatus = await dbAllAsync(`
+      SELECT status, COUNT(*) as total
+      FROM recebimentos
+      GROUP BY status
+    `);
+
+    console.log('vendasPorStatus no main.js:', vendasPorStatus); // Para debug
+    return vendasPorStatus;
+  } catch (error) {
+    console.error('Erro ao buscar vendas por status:', error);
+    return [];
+  }
+});
+
+
+
 // Buscar registros de recebimentos
 ipcMain.handle('buscarRecebimentos', async (event, filtros) => {
   return new Promise((resolve, reject) => {
@@ -862,6 +969,7 @@ app.whenReady().then(async () => {
   } catch (error) {
     console.error("[APP INIT] Falha ao tentar atualizar status vencidos na inicialização:", error);
   }
+  loginUsuario(); // Isso deve ser executado antes do createWindow
 
   createWindow();
 

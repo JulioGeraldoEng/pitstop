@@ -38,6 +38,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   cadastrarUsuario: (usuario, senha) => ipcRenderer.invoke('cadastrarUsuario', usuario, senha),
   alterarSenha: (dados) => ipcRenderer.invoke('alterarSenha', dados),
   redefinirSenha: (dados) => ipcRenderer.invoke('redefinirSenha', dados),
+  getUsuarioLogado: () => ipcRenderer.invoke('get-usuario-logado'),
 
   // Clientes
   getClientes: () => ipcRenderer.invoke('get-clientes'),
@@ -57,6 +58,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   registrarVenda: (dados) => ipcRenderer.invoke('registrar-venda', dados),
   buscarVendas: (filtros) => ipcRenderer.invoke('buscarVendas', filtros),
   exportarParaPDF: (htmlContent) => ipcRenderer.invoke('exportarParaPDF', htmlContent),
+  contarVendasHoje: () => ipcRenderer.invoke('contar-vendas-hoje'),
+  contarVendasMes: () => ipcRenderer.invoke('contar-vendas-mes'),
+  contarVendasTotal: () => ipcRenderer.invoke('contar-vendas-total'),
+  buscarVendasPorStatus: () => ipcRenderer.invoke('buscar-vendas-por-status'),
+  
+  enviar: (canal, ...dados) => ipcRenderer.send(canal, ...dados),
+  handle: (canal, func) => ipcRenderer.on(canal, func),
 
   // Recebimentos
   buscarRecebimentos: (filtros) => ipcRenderer.invoke('buscarRecebimentos', filtros),
