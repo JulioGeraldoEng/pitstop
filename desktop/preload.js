@@ -64,7 +64,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Configurações
   lerArquivoBase64: (caminhoRelativo) => ipcRenderer.invoke('ler-arquivo-base64', caminhoRelativo),
-  sincronizarStatusAtrasadosBanco: () => ipcRenderer.invoke('sincronizar-status-atrasados-banco')
+  sincronizarStatusAtrasadosBanco: () => ipcRenderer.invoke('sincronizar-status-atrasados-banco'),
+  onChangeBodyColor: (callback) => ipcRenderer.on('change-body-color', callback),
 
   // As funções onChangeBodyColor e onShowError foram removidas daqui
   // porque a lógica delas agora é tratada diretamente pelos listeners ipcRenderer.on acima.

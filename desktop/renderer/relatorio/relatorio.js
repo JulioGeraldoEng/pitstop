@@ -419,7 +419,7 @@ document.getElementById('exportarPdf').addEventListener('click', async (e) => {
           <title>Relatório de Vendas - PitStop</title>
           <style>
             /* Seu CSS para o PDF como definido anteriormente */
-            body { font-family: Arial, sans-serif; margin: 25px; padding: 0; font-size: 10pt; }
+            body { font-family: 'Times New Roman', Times, serif; margin: 25px; padding: 0; font-size: 10pt; }
             .pdf-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
             .pdf-header .logo-img-container { flex-shrink: 0; }
             .pdf-header .logo-img-container img { max-height: 35px; max-width: 120px; }

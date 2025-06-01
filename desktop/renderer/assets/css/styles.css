@@ -1,6 +1,6 @@
 /* Estilo geral do corpo da página */
 body {
-  font-family: Arial, sans-serif;
+  font-family: 'Times New Roman', Times, serif, sans-serif;
   background-color: rgb(173, 216, 230);
   padding: 30px;
   text-align: center;
@@ -161,7 +161,7 @@ input {
 /* Em assets/css/styles.css */
 
 #app-footer {
-    background-color: rgba(0, 0, 0, 0.85); /* Sua cor com transparência */
+    background-color: rgba(0, 0, 0, 0.55); /* Sua cor com transparência */
     color: #ffffff;
     text-align: center; /* Centraliza o <p> dentro do footer se o <p> for mais estreito */
     padding: 10px 10px;

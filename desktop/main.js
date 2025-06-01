@@ -971,7 +971,7 @@ app.whenReady().then(async () => {
         {
           label: 'Fundo Vermelho Claro',
           click: () => {
-            updateCssBackgroundColor('rgb(255, 182, 193)'); // Cor exemplo
+            updateCssBackgroundColor('rgba(241, 108, 108, 0.69)'); // Cor exemplo
           }
         },
         {
@@ -983,7 +983,7 @@ app.whenReady().then(async () => {
         {
           label: 'Fundo Verde Claro',
           click: () => {
-            updateCssBackgroundColor('rgb(152, 251, 152)');
+            updateCssBackgroundColor('rgb(173, 255, 173)');
           }
         },
         {
