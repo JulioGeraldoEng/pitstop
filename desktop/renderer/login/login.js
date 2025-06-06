@@ -1,8 +1,3 @@
-// Redireciona automaticamente se já estiver logado
-if (localStorage.getItem('usuarioLogado')) {
-  window.location.href = '../dashboard/dashboard.html';
-}
-
 // Função para desbloquear campos
 function unlockFields() {
   const username = document.getElementById('usuario');

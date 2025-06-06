@@ -37,6 +37,7 @@
 /* Botão dentro do formulário */
 .campo.botao {
   flex: 0 0 auto;
+  width: 100%;
 }
 
 .buttons {
@@ -225,6 +226,7 @@ button#btnCompartilharWhatsApp:hover {
 
   .campo.botao {
     margin-top: 10px;
+    width: 100%;
     /* Removido align-items: center; e flex: 1; daqui pois .buttons já é flex */
   }
 

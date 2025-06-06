@@ -522,6 +522,7 @@ function preencherPDF(vendas, filtros) {
 }
 
 // ===================== [ COMPARTILHAR VENDAS NO WHATSAPP ] =====================
+ /*
 document.getElementById('btnCompartilharWhatsApp').addEventListener('click', () => {
   if (!dadosUltimoRelatorio || dadosUltimoRelatorio.length === 0) {
     exibirMensagem('Nenhuma venda carregada para compartilhar. Realize uma busca primeiro.', 'red');
@@ -575,6 +576,67 @@ PitStop Automação
     setTimeout(() => {
       window.open(link, '_blank');
     }, index * 1000); // 1 segundo entre cada aba
+  });
+
+  exibirMensagem('Mensagens preparadas para envio no WhatsApp.', 'green');
+});*/
+
+document.getElementById('btnCompartilharWhatsApp').addEventListener('click', () => {
+  if (!dadosUltimoRelatorio || dadosUltimoRelatorio.length === 0) {
+    exibirMensagem('Nenhuma venda carregada para compartilhar. Realize uma busca primeiro.', 'red');
+    return;
+  }
+
+  const vendasPorTelefone = {};
+
+  dadosUltimoRelatorio.forEach((venda) => {
+    if (!venda.cliente || !venda.telefone) return;
+
+    const telefone = venda.telefone.replace(/\D/g, '');
+    if (!vendasPorTelefone[telefone]) {
+      vendasPorTelefone[telefone] = {
+        cliente: venda.cliente,
+        vendas: []
+      };
+    }
+    vendasPorTelefone[telefone].vendas.push(venda);
+  });
+
+  Object.entries(vendasPorTelefone).forEach(([telefone, { cliente, vendas }], index) => {
+    let mensagem = `Olá ${cliente}, tudo bem?\n\nSegue o resumo da sua compra na PitStop:\n\n`;
+    let totalGeral = 0;
+
+    vendas.forEach((venda) => {
+      const dataVenda = formatarData(venda.data);
+      const vencimento = formatarData(venda.vencimento);
+      const status = venda.status_pagamento || 'Sem status';
+      const totalVenda = parseFloat(venda.total_venda || 0);
+      totalGeral += totalVenda;
+
+      const itens = venda.itens || [];
+      let listaProdutos = itens.map((item, j) => {
+        const nomeProduto = item.nome_produto || 'Produto';
+        const quantidade = item.quantidade || 1;
+        const preco = formatarMoeda(item.preco_unitario);
+        return `${j + 1}. ${nomeProduto} - ${quantidade}x R$ ${preco}`;
+      }).join('\n');
+
+      if (!listaProdutos) {
+        listaProdutos = 'Nenhum item vendido.';
+      }
+
+      mensagem += `🧾 Venda realizada em: ${dataVenda}\n📅 Vencimento: ${vencimento}\n💳 Status: ${status}\n\n📦 Produtos:\n${listaProdutos}\n\n💰 Total da venda: R$ ${formatarMoeda(totalVenda)}\n\n`;
+    });
+
+    mensagem += `💵 Total Geral: R$ ${formatarMoeda(totalGeral)}\n\n`;
+    mensagem += 'Agradecemos pela preferência!\nPitStop';
+
+    const mensagemCodificada = encodeURIComponent(mensagem.trim());
+    const link = `https://wa.me/${telefone}?text=${mensagemCodificada}`;
+
+    setTimeout(() => {
+      window.open(link, '_blank');
+    }, index * 1000);
   });
 
   exibirMensagem('Mensagens preparadas para envio no WhatsApp.', 'green');

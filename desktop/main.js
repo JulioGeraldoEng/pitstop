@@ -5,12 +5,12 @@ const sqlite3 = require('sqlite3').verbose();
 const { promisify } = require('util');
 
 // Caminho absoluto para a pasta 'db' e o arquivo do banco
-const pastaDB = path.join(__dirname, 'db');
+//const pastaDB = path.join(__dirname, 'db');
+const pastaDB = path.join(app.getPath('userData'), 'db');
 const dbPath = path.join(pastaDB, 'pitstop.db');
 
-// Garante que a pasta 'db' exista antes de tentar acessar o arquivo do banco
 if (!fs.existsSync(pastaDB)) {
-  fs.mkdirSync(pastaDB, { recursive: true });
+  fs.mkdirSync(pastaDB, { recursive: true }); // ✅ agora está criando só a pasta
 }
 
 const dbExiste = fs.existsSync(dbPath);
@@ -20,7 +20,7 @@ const dbAllAsync = promisify(db.all).bind(db);
 
 const cssFilePath = path.join(__dirname, 'renderer', 'assets', 'css', 'styles.css');
 
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 // Variável para armazenar a janela principal
 let mainWindow;
@@ -90,7 +90,7 @@ function initializeDatabase() {
 // Função para criar a janela principal
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 800,
+    width: 1200,
     height: 640,
     icon: path.join(__dirname, 'renderer', 'assets', 'icon', 'pitstop_icon.ico'),
     webPreferences: {
@@ -101,12 +101,12 @@ function createWindow() {
   });
 
   // Carrega a página de login ou dashboard
-  //mainWindow.loadFile('renderer/login/login.html'); // Certifique-se de que este é o caminho correto
-  if (usuarioLogado) {
+  mainWindow.loadFile('renderer/login/login.html'); // Certifique-se de que este é o caminho correto
+  /*if (usuarioLogado) {
     mainWindow.loadFile('renderer/dashboard/dashboard.html');
   } else {
     mainWindow.loadFile('renderer/login/login.html');
-  }
+  }*/
   // Limpa a referência à janela quando ela é fechada
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -663,8 +663,6 @@ ipcMain.handle('buscar-vendas-por-status', async () => {
     return [];
   }
 });
-
-
 
 // Buscar registros de recebimentos
 ipcMain.handle('buscarRecebimentos', async (event, filtros) => {
