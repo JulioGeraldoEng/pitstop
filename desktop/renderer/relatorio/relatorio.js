@@ -309,8 +309,6 @@ function processarResultados(vendas, filtros) {
   }
 }
 
-
-
 // ===================== [ AUTOCOMPLETE DE CLIENTES ] =====================
 // ... (seu código de autocomplete permanece o mesmo, mas use inputCliente (global) e sugestoes (global)) ...
 function posicionarSugestoes(input, box) {

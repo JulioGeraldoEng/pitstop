@@ -1,0 +1,47 @@
+/* Botão: Conectar WhatsApp */
+button#btnWhatsapp {
+  background-color: #25D366;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  font-size: 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button#btnWhatsapp:hover {
+  background-color: #1ebe5e;
+}
+
+/* Botão: Enviar Vendas Atrasadas */
+button#btnSendLateSales {
+  background-color: #ebac01;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  font-size: 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button#btnSendLateSales:hover {
+  background-color: #d89c00;
+}
+
+/* Container do QR Code */
+#qrcode-container {
+  margin-top: 20px;
+  text-align: center;
+}
+
+#qrcode-container img {
+  margin-top: 10px;
+  max-width: 250px;
+  height: auto;
+  border: 1px solid #ccc;
+  padding: 10px;
+  background: white;
+  border-radius: 8px;
+}

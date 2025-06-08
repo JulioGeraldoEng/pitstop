@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pitstop - Integração WhatsApp</title>
+
+  <!-- Ícones Font Awesome -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+  />
+
+  <!-- Estilos globais -->
+  <link rel="stylesheet" href="../assets/css/styles.css" />
+  <!-- Estilo específico WhatsApp -->
+  <link rel="stylesheet" href="whatsapp.css" />
+</head>
+<body>
+  <!-- Barra superior -->
+  <div class="top-bar">
+    <button type="button" onclick="irPara('../dashboard/dashboard.html')">
+      <i class="fas fa-home"></i> Início
+    </button>
+    <button type="button" onclick="logout()">
+      <i class="fas fa-sign-out-alt"></i> Sair
+    </button>
+  </div>
+
+  <main>
+    <h1>Integração com WhatsApp</h1>
+
+    <div class="form-linha">
+      <div class="campo botao">
+        <label>&nbsp;</label>
+        <div class="buttons" style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button type="button" id="btnWhatsapp">
+            <i class="fab fa-whatsapp"></i> Conectar WhatsApp
+          </button>
+          <button type="button" id="btnRestartSession">
+            <i class="fas fa-sync-alt"></i> Reiniciar Sessão
+          </button>
+          <button type="button" id="btnSendLateSales">
+            <i class="fas fa-paper-plane"></i> Enviar Vendas Atrasadas
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- Mensagem de carregamento -->
+    <div id="loadingMessage" style="display: none; margin-top: 15px;">
+      Carregando QR Code...
+    </div>
+
+    <!-- QR Code SVG será inserido aqui -->
+    <div id="qrcode-container" style="display: none; margin-top: 15px;">
+      <!-- Conteúdo dinâmico do QR Code -->
+    </div>
+  </main>
+
+  <!-- Script principal -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="whatsapp.js" defer></script>
+  <script src="../assets/js/global-scripts.js" defer></script>
+</body>
+</html>

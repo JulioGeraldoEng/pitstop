@@ -20,6 +20,7 @@
     <a href="../relatorio/relatorio.html"><i class="fas fa-chart-bar"></i> <span>Relatórios</span></a>
     <a href="../cliente/cliente.html"><i class="fas fa-user-plus"></i> <span>Clientes</span></a>
     <a href="../produto/produto.html"><i class="fas fa-box"></i> <span>Produtos</span></a>
+    <a href="../whatsapp/whatsapp.html"><i class="fab fa-whatsapp"></i><span>Conectar WhatsApp</span></a>
     <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> <span>Sair</span></a>
   </div>
 
@@ -30,6 +31,7 @@
       </div>
     </header>
 
+    <main>
     <h1>Bem-vindo ao Sistema de Vendas PitStop</h1>
     <p>Escolha uma das opções no menu à esquerda.</p>
 
@@ -52,30 +54,11 @@
       <div id="status-vendas" class="cards-status-container"></div>
       
     </div>
-   
+   </main>
 
   </div>
 
-  
-
-
-
   <script src="dashboard.js"></script>
-  <script>
-    function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('collapsed');
-    }
-  </script>
-  <script>
-    window.addEventListener('DOMContentLoaded', async () => {
-      const spanUsuario = document.getElementById('loggedUser');
-      if (spanUsuario && window.electronAPI) {
-        const nomeUsuario = await window.electronAPI.getUsuarioLogado();
-        spanUsuario.textContent = nomeUsuario || 'Usuário não identificado';
-      }
-    });
-  </script>
-
   <script src="../assets/js/global-scripts.js" defer></script>
 </body>
 </html>

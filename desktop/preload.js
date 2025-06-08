@@ -75,6 +75,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   sincronizarStatusAtrasadosBanco: () => ipcRenderer.invoke('sincronizar-status-atrasados-banco'),
   onChangeBodyColor: (callback) => ipcRenderer.on('change-body-color', callback),
 
+  abrirWhatsapp: () => ipcRenderer.send('abrir-whatsapp'),
+  getClientesAtrasados: () => ipcRenderer.invoke('get-clientes-atrasados'),
+
   // As funções onChangeBodyColor e onShowError foram removidas daqui
   // porque a lógica delas agora é tratada diretamente pelos listeners ipcRenderer.on acima.
   // Não há mais necessidade de chamá-las a partir do renderer.js para este comportamento.

@@ -1,38 +1,73 @@
 /* Estilo geral do corpo da página */
 body {
   font-family: 'Times New Roman', Times, serif, sans-serif;
-  background-color: rgb(173, 216, 230);
+  background-color: rgba(241, 108, 108, 0.69);
   padding: 30px;
   text-align: center;
   color: #000000;
 }
 
-/* Barra superior */
-.top-bar {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  padding-bottom: 20px;
+main {
+  max-width: auto;
+  margin: 20px auto;
+  background: rgb(240, 240, 240, 0.7);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.1);
 }
 
+/* Barra superior com visual moderno e suave */
+.top-bar {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 20px;
+  background-color: rgba(240, 240, 240, 0.7); /* levemente transparente */
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  margin: 0px auto;
+  max-width: auto;
+  position: relative;
+  color: #333;
+}
+
+/* Estilo moderno dos botões da barra */
 .top-bar button,
 .menu button {
-  padding: 8px 15px;
-  background-color: #0078d7;
-  color: white;
-  border: none;
-  border-radius: 5px;
+  padding: 10px 16px;
+  background-color: rgba(100, 100, 255, 0.12); /* tom mais escuro baseado no body */
+  color: #333;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 14px;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  transition: background-color 0.3s, transform 0.2s;
 }
 
+/* Hover com leve destaque */
 .top-bar button:hover,
 .menu button:hover {
-  background-color: #005fa3;
+  background-color: rgba(38, 38, 255, 0.25);
+  transform: translateY(-1px);
 }
+
+/* Animação nos ícones */
+.top-bar i {
+  font-size: 12px;
+  transition: transform 0.3s ease;
+}
+
+.top-bar button:hover i {
+  transform: scale(1.15);
+}
+
+
 
 /* Formulário */
 .formulario {

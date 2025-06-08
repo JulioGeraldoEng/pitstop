@@ -11,7 +11,17 @@ if (!localStorage.getItem('usuarioLogado')) {
     window.location.href = '../login/login.html';
 }
 
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+
 window.addEventListener('DOMContentLoaded', async () => {
+  const spanUsuario = document.getElementById('loggedUser');
+  if (spanUsuario && window.electronAPI) {
+    const nomeUsuario = await window.electronAPI.getUsuarioLogado();
+    spanUsuario.textContent = nomeUsuario || 'Usuário não identificado';
+  }
+
   try {
     const vendasHoje = await window.electronAPI.contarVendasHoje();
     const vendasMes = await window.electronAPI.contarVendasMes();
@@ -63,6 +73,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     container.appendChild(card);
   });
 
+  
 
   } catch (error) {
     console.error('Erro ao buscar dados de vendas:', error);

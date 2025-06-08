@@ -26,6 +26,7 @@ const bcrypt = require('bcryptjs');
 let mainWindow;
 let aboutWindow = null; // Janela "Sobre"
 let usuarioLogado = null; // Variável para armazenar o usuário logado
+let whatsappWindow = null; //
 
 // Função de inicialização do banco de dados (chamada apenas uma vez)
 function initializeDatabase() {
@@ -1208,6 +1209,107 @@ function updateCssBackgroundColor(newColor) {
     mainWindow.webContents.send('show-error-message', `Erro ao salvar cor no CSS: ${error.message}`);
   }
 }
+
+ipcMain.on('abrir-whatsapp', () => {
+  if (whatsappWindow) {
+    whatsappWindow.focus();
+    return;
+  }
+
+  whatsappWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    title: 'Conexão WhatsApp - PitStop',
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false
+    }
+  });
+
+  whatsappWindow.loadFile('renderer/whatsapp/whatsapp.html');
+
+  whatsappWindow.on('closed', () => {
+    whatsappWindow = null;
+  });
+});
+
+// ADICIONE ESTE NOVO HANDLER PARA BUSCAR CLIENTES COM VENDAS ATRASADAS
+ipcMain.handle('get-clientes-atrasados', async () => {
+  return new Promise((resolve, reject) => {
+    const query = `
+      SELECT 
+        c.nome AS cliente,
+        c.telefone,
+        v.id AS venda_id,
+        v.data AS data_venda,
+        r.data_vencimento AS vencimento,
+        r.status AS status_pagamento,
+        v.total AS total_venda,
+        p.nome AS nome_produto,
+        iv.quantidade,
+        iv.preco_unitario
+      FROM clientes c
+      JOIN vendas v ON c.id = v.cliente_id
+      JOIN recebimentos r ON v.id = r.venda_id
+      LEFT JOIN itens_venda iv ON iv.venda_id = v.id
+      LEFT JOIN produtos p ON p.id = iv.produto_id
+      WHERE 
+        ( (LOWER(r.status) = 'pendente' OR LOWER(r.status) = 'atrasado') AND DATE(r.data_vencimento) < DATE('now', 'localtime') )
+      ORDER BY c.telefone, v.id, p.nome
+    `;
+
+    db.all(query, [], (err, rows) => {
+      if (err) {
+        console.error("Erro ao buscar vendas atrasadas:", err.message);
+        return reject([]);
+      }
+
+      const agrupado = {};
+      rows.forEach(row => {
+        //const telefone = row.telefone?.replace(/\D/g, '');
+        let telefone = row.telefone?.replace(/\D/g, '');
+        if (telefone.length === 11 && !telefone.startsWith('55')) {
+          telefone = '55' + telefone;
+        }
+        if (!telefone) return;
+
+        if (!agrupado[telefone]) {
+          agrupado[telefone] = {
+            cliente: row.cliente,
+            telefone,
+            vendas: []
+          };
+        }
+
+        let venda = agrupado[telefone].vendas.find(v => v.venda_id === row.venda_id);
+        if (!venda) {
+          venda = {
+            venda_id: row.venda_id,
+            data: row.data_venda,
+            vencimento: row.vencimento,
+            status_pagamento: row.status_pagamento,
+            total_venda: row.total_venda,
+            itens: []
+          };
+          agrupado[telefone].vendas.push(venda);
+        }
+
+        if (row.nome_produto) {
+          venda.itens.push({
+            nome_produto: row.nome_produto,
+            quantidade: row.quantidade,
+            preco_unitario: row.preco_unitario
+          });
+        }
+      });
+
+      resolve(Object.values(agrupado));
+    });
+  });
+});
+
+
 
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit();
