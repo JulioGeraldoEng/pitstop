@@ -2,6 +2,8 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
   <title>Pitstop - Integração WhatsApp</title>
 
   <!-- Ícones Font Awesome -->
@@ -17,18 +19,12 @@
 </head>
 <body>
   <!-- Barra superior -->
-  <div class="top-bar">
-    <button type="button" onclick="irPara('../dashboard/dashboard.html')">
-      <i class="fas fa-home"></i> Início
-    </button>
-    <button type="button" onclick="logout()">
-      <i class="fas fa-sign-out-alt"></i> Sair
-    </button>
-  </div>
+  <div id="top-bar-container"></div>
 
   <main>
     <h1>Integração com WhatsApp</h1>
 
+    <form class="formulario"> 
     <div class="form-linha">
       <div class="campo botao">
         <label>&nbsp;</label>
@@ -54,6 +50,7 @@
     <div id="qrcode-container" style="display: none; margin-top: 15px;">
       <!-- Conteúdo dinâmico do QR Code -->
     </div>
+    </form>
   </main>
 
   <!-- Script principal -->

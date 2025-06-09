@@ -34,7 +34,11 @@ document.addEventListener('DOMContentLoaded', () => {
       // Nada mais a fazer — QR Code virá por WebSocket
     } catch (error) {
       console.error('Erro ao conectar com WPPConnect:', error);
-      alert('Erro ao conectar com o servidor WPPConnect.');
+      await window.electronAPI.showDialog({
+        type: 'error',
+        title: 'WhatsApp',
+        message: 'Erro ao conectar com o servidor WPPConnect.',
+      });
       loadingMessage.style.display = 'none';
     }
   }
@@ -70,11 +74,18 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!response.ok) {
         throw new Error(result.error || 'Erro ao reiniciar sessão.');
       }
-
-      alert('Sessão reiniciada com sucesso!');
+      await window.electronAPI.showDialog({
+        type: 'info',
+        title: 'WhatsApp',
+        message: 'Sessão reiniciada com sucesso!',
+      });
     } catch (error) {
       console.error('Erro ao reiniciar sessão:', error);
-      alert('Erro ao reiniciar sessão do WhatsApp.');
+      await window.electronAPI.showDialog({
+        type: 'error',
+        title: 'WhatsApp',
+        message: 'Erro ao reiniciar sessão do WhatsApp.',
+      });
     } finally {
       loadingMessage.style.display = 'none';
       loadingMessage.textContent = 'Aguardando QR Code...';
@@ -87,7 +98,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const clientesAtrasados = await window.electronAPI.getClientesAtrasados();
 
       if (!clientesAtrasados || clientesAtrasados.length === 0) {
-        alert('Nenhum cliente com vendas atrasadas encontrado.');
+        await window.electronAPI.showDialog({
+          type: 'warning',
+          title: 'WhatsApp',
+          message: 'Nenhum cliente com vendas atrasadas encontrado.',
+        });
         return;
       }
 
@@ -98,10 +113,18 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       const result = await response.json();
-      alert(result.message || 'Mensagens enviadas com sucesso!');
+      await window.electronAPI.showDialog({
+        type: 'info',
+        title: 'WhatsApp',
+        message: result.message || 'Mensagens enviadas com sucesso!',
+      });
     } catch (error) {
       console.error('Erro ao enviar mensagens:', error);
-      alert('Erro ao enviar mensagens para clientes com vendas atrasadas.');
+      await window.electronAPI.showDialog({
+          type: 'error',
+          title: 'WhatsApp',
+          message: 'Erro ao enviar mensagens para clientes com vendas atrasadas.',
+        });
     }
   }
 

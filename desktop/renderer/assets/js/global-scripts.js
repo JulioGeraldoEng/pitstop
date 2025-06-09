@@ -32,6 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Aplica a cor salva no body e sidebar
         mudarCorBody(corSalva);
     }
+
+    carregarTopBar(); // ← chamada do carregador da top-bar
 });
 
 function aplicarCorSidebarComBaseNoBody() {
@@ -69,7 +71,65 @@ function mudarCorBody(cor) {
     aplicarCorSidebarComBaseNoBody();
 }
 
+async function carregarTopBar() {
+    const container = document.getElementById('top-bar-container');
+    if (!container) return; // Evita erro se o container não existir
+
+    try {
+        const response = await fetch('../assets/html/top-bar.html');
+        if (!response.ok) throw new Error('Erro ao carregar top-bar');
+        const html = await response.text();
+        container.innerHTML = html;
+    } catch (erro) {
+        console.error('Falha ao carregar a top-bar:', erro);
+    }
+}
+
 // Se quiser escutar evento vindo do Electron para mudar cor dinamicamente
 window.electronAPI?.onChangeBodyColor?.((event, corHex) => {
     mudarCorBody(corHex);
 });
+
+window.electronAPI.onTriggerAction((event, action) => {
+  if (action === 'sincronizarStatusAtrasados') {
+    sincronizarStatusAtrasados();
+  }
+});
+
+async function sincronizarStatusAtrasados() {
+  try {
+    const resposta = await window.electronAPI.sincronizarStatusAtrasadosBanco();
+
+    if (resposta.success) {
+      exibirMensagem('✔️ Sincronização concluída com sucesso!', 'success');
+    } else {
+      exibirMensagem('❌ Falha na sincronização: ' + resposta.message, 'error');
+    }
+  } catch (error) {
+    exibirMensagem('❌ Erro inesperado: ' + error.message, 'error');
+  }
+}
+
+function exibirMensagem(texto, tipo) {
+  const div = document.createElement('div');
+  div.textContent = texto;
+  div.style.position = 'fixed';
+  div.style.top = '20px';
+  div.style.right = '20px';
+  div.style.padding = '12px 20px';
+  div.style.borderRadius = '10px';
+  div.style.fontWeight = 'bold';
+  div.style.zIndex = '9999';
+  div.style.color = '#fff';
+  div.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
+  div.style.fontSize = '14px';
+  div.style.fontFamily = 'sans-serif';
+  div.style.backgroundColor = tipo === 'success' ? '#28a745' : '#dc3545';
+
+  document.body.appendChild(div);
+  setTimeout(() => div.remove(), 4000);
+}
+
+function irPara(caminho) {
+    window.location.href = caminho;
+}

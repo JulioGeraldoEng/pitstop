@@ -24,14 +24,6 @@ ipcRenderer.on('change-body-color', (_event, colorValue) => {
   }
 });
 
-// Listener direto para exibir mensagens de erro.
-// Esta lógica também será executada automaticamente.
-ipcRenderer.on('show-error-message', (_event, message) => {
-  // alert() está disponível globalmente no contexto do renderer
-  alert(message);
-});
-// ---- Fim da lógica movida ----
-
 // Suas APIs existentes expostas para o processo de renderização
 contextBridge.exposeInMainWorld('electronAPI', {
   sendLogin: (credentials) => ipcRenderer.invoke('login-attempt', credentials),
@@ -74,11 +66,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
   lerArquivoBase64: (caminhoRelativo) => ipcRenderer.invoke('ler-arquivo-base64', caminhoRelativo),
   sincronizarStatusAtrasadosBanco: () => ipcRenderer.invoke('sincronizar-status-atrasados-banco'),
   onChangeBodyColor: (callback) => ipcRenderer.on('change-body-color', callback),
+  onTriggerAction: (callback) => ipcRenderer.on('trigger-action', callback),
 
+  // WhatsApp
   abrirWhatsapp: () => ipcRenderer.send('abrir-whatsapp'),
   getClientesAtrasados: () => ipcRenderer.invoke('get-clientes-atrasados'),
 
-  // As funções onChangeBodyColor e onShowError foram removidas daqui
-  // porque a lógica delas agora é tratada diretamente pelos listeners ipcRenderer.on acima.
-  // Não há mais necessidade de chamá-las a partir do renderer.js para este comportamento.
+  // Operações no banco de dados
+  buscarDados: (tabela) => ipcRenderer.invoke('buscar-dados', tabela),
+  excluirDado: (info) => ipcRenderer.invoke('excluir-dado', info),
+  atualizarDado: (info) => ipcRenderer.invoke('atualizar-dado', info),
+
+  // Mensagens
+  showDialog: (options) => ipcRenderer.invoke('mostrar-dialogo', options)
 });

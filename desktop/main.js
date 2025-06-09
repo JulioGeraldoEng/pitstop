@@ -1,4 +1,4 @@
-const { app, Menu, BrowserWindow, ipcMain } = require('electron');
+const { app, Menu, ipcMain, dialog, BrowserWindow } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
@@ -17,6 +17,7 @@ const dbExiste = fs.existsSync(dbPath);
 const db = new sqlite3.Database(dbPath);
 
 const dbAllAsync = promisify(db.all).bind(db);
+const dbRunAsync = promisify(db.run).bind(db);
 
 const cssFilePath = path.join(__dirname, 'renderer', 'assets', 'css', 'styles.css');
 
@@ -113,6 +114,31 @@ function createWindow() {
     mainWindow = null;
   });
 }
+
+// Janela para Mnipular Dados
+function abrirJanelaManipularDados() {
+  const janelaDados = new BrowserWindow({
+    width: 800,
+    height: 600,
+    icon: path.join(__dirname, 'renderer', 'assets', 'icon', 'pitstop_icon.ico'),
+    autoHideMenuBar: true, // 👉 oculta o menu da janela
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'), // seu preload
+      contextIsolation: true,
+      nodeIntegration: false
+    }
+  });
+
+  janelaDados.setMenuBarVisibility(false);
+
+  janelaDados.loadFile(path.join(__dirname, 'renderer', 'dados', 'dados.html')); // ajuste o caminho conforme seu projeto
+
+  // opcional: abrir devtools para depuração
+  //janelaDados.webContents.openDevTools();
+
+  return janelaDados;
+}
+
 
 function loginUsuario(usuario) {
   try {
@@ -977,20 +1003,73 @@ app.whenReady().then(async () => {
     label: 'Arquivo', // Nome do menu principal
     submenu: [
       {
-        label: 'Abrir Ferramenta X',
+        label: 'Exportar Banco de Dados',
         click: async () => {
-          // Lógica para abrir uma nova janela ou executar uma ação
-          console.log('Abrir Ferramenta X clicado!');
-          // Exemplo: criar uma nova janela
-          // const newWindow = new BrowserWindow({ width: 600, height: 400 });
-          // newWindow.loadFile('caminho/para/ferramenta_x.html');
+          if (!usuarioLogado) {
+            // Pode mostrar um diálogo ou notificação para avisar que precisa logar
+            const { dialog } = require('electron');
+            dialog.showErrorBox('Acesso negado', 'Você precisa estar logado para acessar essa função.');
+            return;
+          }
+          const { dialog } = require('electron');
+          const fs = require('fs');
+
+          const { filePath } = await dialog.showSaveDialog({
+            title: 'Salvar cópia do banco de dados',
+            defaultPath: 'backup-pitstop.db',
+            filters: [{ name: 'Banco de Dados', extensions: ['db'] }]
+          });
+
+          if (filePath) {
+            try {
+              fs.copyFileSync(dbPath, filePath);
+              console.log('Banco exportado com sucesso para:', filePath);
+            } catch (error) {
+              console.error('Erro ao exportar banco:', error);
+            }
+          }
         }
       },
       {
-        label: 'Configurações',
+        label: 'Importar Banco de Dados',
+        click: async () => {
+          if (!usuarioLogado) {
+            // Pode mostrar um diálogo ou notificação para avisar que precisa logar
+            const { dialog } = require('electron');
+            dialog.showErrorBox('Acesso negado', 'Você precisa estar logado para acessar essa função.');
+            return;
+          }
+          const { dialog } = require('electron');
+          const fs = require('fs');
+
+          const { filePaths } = await dialog.showOpenDialog({
+            title: 'Selecionar banco de dados para importar',
+            properties: ['openFile'],
+            filters: [{ name: 'Banco de Dados', extensions: ['db'] }]
+          });
+
+          if (filePaths && filePaths[0]) {
+            try {
+              fs.copyFileSync(filePaths[0], dbPath);
+              console.log('Banco importado com sucesso de:', filePaths[0]);
+              mainWindow.webContents.reload(); // Atualiza a janela para refletir os dados novos
+            } catch (error) {
+              console.error('Erro ao importar banco:', error);
+            }
+          }
+        }
+      },
+      { type: 'separator' }, // Adiciona uma linha separadora
+      {
+        label: 'Gerenciar Registros',
         click: () => {
-          console.log('Configurações clicado!');
-          // Lógica para abrir a janela de configurações
+          if (!usuarioLogado) {
+            // Pode mostrar um diálogo ou notificação para avisar que precisa logar
+            const { dialog } = require('electron');
+            dialog.showErrorBox('Acesso negado', 'Você precisa estar logado para acessar essa função.');
+            return;
+          }
+          abrirJanelaManipularDados();
         }
       },
       { type: 'separator' }, // Adiciona uma linha separadora
@@ -1104,22 +1183,6 @@ app.whenReady().then(async () => {
     {
       label: 'Configurações',
       submenu: [
-        {
-          label: 'Preferências do Aplicativo...',
-          click: () => {
-            // Lógica para abrir uma janela de configurações/preferências
-            // Ex: criar uma nova BrowserWindow e carregar um 'configuracoes.html'
-            console.log('Abrir janela de Preferências do Aplicativo');
-          }
-        },
-        {
-          label: 'Backup e Restauração de Dados...',
-          click: () => {
-            // Lógica para abrir ferramentas de backup/restauração
-            console.log('Abrir Backup/Restauração');
-          }
-        },
-        { type: 'separator' },
         {
           label: 'Sincronizar Status Atrasados', // Você tinha isso no seu preload
           click: () => {
@@ -1309,7 +1372,48 @@ ipcMain.handle('get-clientes-atrasados', async () => {
   });
 });
 
+// Atualizar ou Excluir Itens do Banco
+ipcMain.handle('buscar-dados', async (event, tabela) => {
+  const tabelasValidas = ['usuarios', 'clientes', 'produtos', 'vendas', 'recebimentos'];
+  if (!tabelasValidas.includes(tabela)) throw new Error('Tabela inválida');
+  const query = `SELECT * FROM ${tabela}`;
+  return await dbAllAsync(query);
+});
 
+ipcMain.handle('atualizar-dado', async (event, { tabela, dado }) => {
+  const { id, ...campos } = dado;
+
+  if (!id) throw new Error('ID é obrigatório para atualizar.');
+
+  // Monta o SET dinamicamente: "campo1 = ?, campo2 = ?, ..."
+  const setString = Object.keys(campos).map(campo => `${campo} = ?`).join(', ');
+  const valores = Object.values(campos);
+
+  const sql = `UPDATE ${tabela} SET ${setString} WHERE id = ?`;
+
+  // Adiciona o id no final dos valores
+  valores.push(id);
+
+  await dbRunAsync(sql, valores);
+
+  return { success: true };
+});
+
+ipcMain.handle('excluir-dado', async (event, { tabela, id }) => {
+  if (!id) throw new Error('ID é obrigatório para exclusão.');
+
+  const sql = `DELETE FROM ${tabela} WHERE id = ?`;
+
+  await dbRunAsync(sql, [id]);
+
+  return { success: true };
+});
+
+// Mensagens
+ipcMain.handle('mostrar-dialogo', async (event, options) => {
+  const win = BrowserWindow.getFocusedWindow();
+  return await dialog.showMessageBox(win, options);
+});
 
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit();

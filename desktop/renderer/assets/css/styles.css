@@ -1,7 +1,8 @@
 /* Estilo geral do corpo da página */
+
 body {
   font-family: 'Times New Roman', Times, serif, sans-serif;
-  background-color: rgba(241, 108, 108, 0.69);
+  background-color: rgb(173, 216, 230);
   padding: 30px;
   text-align: center;
   color: #000000;
@@ -19,19 +20,33 @@ main {
 /* Barra superior com visual moderno e suave */
 .top-bar {
   display: flex;
+  flex-wrap: wrap; /* Permite que os botões quebrem linha */
   justify-content: flex-start;
   gap: 12px;
   align-items: center;
   padding: 12px 20px;
-  background-color: rgba(240, 240, 240, 0.7); /* levemente transparente */
+  background-color: rgba(240, 240, 240, 0.7);
   backdrop-filter: blur(8px);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   border-radius: 12px;
   margin: 0px auto;
-  max-width: auto;
+  width: auto; /* Garante que ela ocupe a largura total */
+  max-width: 100%;
   position: relative;
   color: #333;
 }
+
+@media (max-width: 500px) {
+  .top-bar {
+    justify-content: center;
+  }
+
+  .top-bar button {
+    flex: 1 1 100%; /* Botões ocupam toda a largura disponível */
+    justify-content: center;
+  }
+}
+
 
 /* Estilo moderno dos botões da barra */
 .top-bar button,
@@ -176,6 +191,19 @@ input {
   color: darkred;
 }
 
+/* Botao de salvar */
+.btn-salvar {
+  background: none;
+  border: none;
+  color: rgba(30, 255, 0, 0.801);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.btn-salvar:hover {
+  color: rgb(0, 139, 12);
+}
+
 /* Menu inferior */
 .menu {
   margin-top: 30px;
@@ -190,10 +218,6 @@ input {
   border-radius: 5px;
   cursor: pointer;
 }
-
-/* Em assets/css/styles.css */
-
-/* Em assets/css/styles.css */
 
 #app-footer {
     background-color: rgba(0, 0, 0, 0.55); /* Sua cor com transparência */

@@ -26,6 +26,9 @@
     background-color: #f9f9f9; /* Fundo levemente diferente */
     padding: 10px 10px 10px 25px; /* Mais padding interno */
     font-weight: normal; /* Resetar bold se herdado */
+    text-align: justify; /* Justificar o texto para alinhamento uniforme */
+    line-height: 1.2; /* Altura de linha para melhor legibilidade */
+    border-radius: 5px; /* Cantos arredondados para melhor estética */
 }
 
 .feature-details p, .feature-details ul {
@@ -56,4 +59,11 @@
     /* display: inline-block; */ /* Pode não ser necessário se o li já está alinhado à esquerda */
     /* width: auto; */
     text-align: left; /* Garante que o texto dentro do span não seja centralizado */
+}
+
+.about-text {
+    text-align: justify; /* Alinha o texto nas duas margens */
+    line-height: 1.2; /* Espaçamento entre linhas para melhor leitura */
+    padding: 5px 20px; /* Espaço interno */
+    font-size: 1rem; /* Tamanho de fonte legível */
 }

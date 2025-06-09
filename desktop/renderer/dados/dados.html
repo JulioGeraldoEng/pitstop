@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gerenciar Registros</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+
+  <main>
+    <h1>Gerenciamento de Dados</h1>
+
+    <label for="tabela-selecionada">Escolher Tabela:</label>
+    <select id="tabela-selecionada">
+      <option value="usuarios">Usuários</option>
+      <option value="clientes">Clientes</option>
+      <option value="produtos">Produtos</option>
+      <option value="vendas">Vendas</option>
+      <option value="recebimentos">Recebimentos</option>
+    </select>
+
+    <button id="btnBuscar" style="display: none;">Buscar</button>
+
+    <!-- Tabela genérica para todas as tabelas -->
+    <table id="tabela-dados" class="tabela-estilizada">
+      <thead>
+        <tr id="cabecalho-tabela"></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </main>
+
+  <script src="dados.js"></script>
+  <script src="../assets/js/global-scripts.js" defer></script>
+</body>
+</html>
